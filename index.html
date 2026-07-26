@@ -1,458 +1,2099 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>LM Studio · Local Console</title>
-<style>
-  :root{
-    --bg: #0d1210;
-    --panel: #121915;
-    --panel-2: #161f1a;
-    --line: #23302a;
-    --text: #e7efe9;
-    --text-dim: #8ba396;
-    --accent: #5ee6a3;
-    --accent-dim: #2f8d63;
-    --user: #1c2723;
-    --danger: #e6685e;
-    --mono: 'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(94,230,163,0.05), transparent 60%),
-      var(--bg);
-    color:var(--text);
-    font-family:var(--sans);
-    display:flex;
-    flex-direction:column;
-    height:100dvh;
-    overflow:hidden;
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"><title>LM Studio · Local Console</title><style>
+
+:root{
+
+  /* DEFAULT THEME: DARK CONSOLE */
+
+  --bg: #0d1210;
+  --panel: #121915;
+  --panel-2: #161f1a;
+  --line: #23302a;
+  --text: #e7efe9;
+  --text-dim: #8ba396;
+  --accent: #5ee6a3;
+  --accent-dim: #2f8d63;
+  --user: #1c2723;
+  --danger: #e6685e;
+
+  --mono:
+    'SF Mono',
+    'JetBrains Mono',
+    ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
+
+  --sans:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+
+}
+
+
+/* LIGHT CLEAN THEME */
+
+body.light-theme{
+
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --panel-2: #ffffff;
+  --line: #e1e3e6;
+  --text: #17181a;
+  --text-dim: #73777d;
+  --accent: #111111;
+  --accent-dim: #111111;
+  --user: #111111;
+  --danger: #c62828;
+
+}
+
+
+/* BASE */
+
+*{
+
+  box-sizing:border-box;
+
+  -webkit-tap-highlight-color:transparent;
+
+}
+
+html,
+body{
+
+  height:100%;
+
+}
+
+body{
+
+  margin:0;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(94,230,163,0.05),
+      transparent 60%
+    ),
+    var(--bg);
+
+  color:var(--text);
+
+  font-family:var(--sans);
+
+  display:flex;
+
+  flex-direction:column;
+
+  height:100dvh;
+
+  overflow:hidden;
+
+  transition:
+    background .2s ease,
+    color .2s ease;
+
+}
+
+
+/* LIGHT THEME BACKGROUND */
+
+body.light-theme{
+
+  background:var(--bg);
+
+}
+
+
+/* HEADER */
+
+header{
+
+  flex:0 0 auto;
+
+  padding:
+    max(12px, env(safe-area-inset-top))
+    14px
+    10px;
+
+  border-bottom:1px solid var(--line);
+
+  background:var(--panel);
+
+  transition:
+    background .2s ease,
+    border-color .2s ease;
+
+}
+
+.head-row{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+}
+
+.logo{
+
+  width:9px;
+
+  height:9px;
+
+  border-radius:50%;
+
+  background:var(--danger);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(230,104,94,0.15);
+
+  flex:0 0 auto;
+
+  transition:
+    background .2s,
+    box-shadow .2s;
+
+}
+
+.logo.online{
+
+  background:var(--accent);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(94,230,163,0.15);
+
+}
+
+.logo.busy{
+
+  background:#e6c25e;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(230,194,94,0.15);
+
+  animation:pulse 1s infinite;
+
+}
+
+@keyframes pulse{
+
+  50%{
+    opacity:.4;
   }
 
-  /* HEADER */
-  header{
-    flex:0 0 auto;
-    padding: max(12px, env(safe-area-inset-top)) 14px 10px;
-    border-bottom:1px solid var(--line);
-    background:var(--panel);
-  }
-  .head-row{ display:flex; align-items:center; gap:10px; }
-  .logo{
-    width:9px; height:9px; border-radius:50%;
-    background:var(--danger);
-    box-shadow:0 0 0 3px rgba(230,104,94,0.15);
-    flex:0 0 auto;
-    transition: background .2s, box-shadow .2s;
-  }
-  .logo.online{ background:var(--accent); box-shadow:0 0 0 3px rgba(94,230,163,0.15); }
-  .logo.busy{ background:#e6c25e; box-shadow:0 0 0 3px rgba(230,194,94,0.15); animation:pulse 1s infinite; }
-  @keyframes pulse{ 50%{opacity:.4;} }
-  h1{
-    font-size:14px; font-weight:600; letter-spacing:.02em; margin:0;
-    font-family:var(--mono);
-    text-transform:uppercase;
-  }
-  .head-sub{ font-size:11px; color:var(--text-dim); font-family:var(--mono); margin-left:auto; text-align:right; }
-  .gear{
-    background:none; border:none; color:var(--text-dim); font-size:18px;
-    padding:4px 2px; line-height:1; cursor:pointer;
+}
+
+h1{
+
+  font-size:14px;
+
+  font-weight:600;
+
+  letter-spacing:.02em;
+
+  margin:0;
+
+  font-family:var(--mono);
+
+  text-transform:uppercase;
+
+}
+
+.head-sub{
+
+  font-size:11px;
+
+  color:var(--text-dim);
+
+  font-family:var(--mono);
+
+  margin-left:auto;
+
+  text-align:right;
+
+  max-width:42vw;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  white-space:nowrap;
+
+}
+
+.gear{
+
+  background:none;
+
+  border:none;
+
+  color:var(--text-dim);
+
+  font-size:18px;
+
+  padding:4px 2px;
+
+  line-height:1;
+
+  cursor:pointer;
+
+}
+
+
+/* SETTINGS */
+
+#settings{
+
+  flex:0 0 auto;
+
+  max-height:0;
+
+  overflow:hidden;
+
+  background:var(--panel-2);
+
+  border-bottom:1px solid var(--line);
+
+  transition:
+
+    max-height .25s ease;
+
+}
+
+#settings.open{
+
+  max-height:500px;
+
+}
+
+.settings-inner{
+
+  padding:14px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:10px;
+
+}
+
+.field label{
+
+  display:block;
+
+  font-size:11px;
+
+  color:var(--text-dim);
+
+  font-family:var(--mono);
+
+  text-transform:uppercase;
+
+  letter-spacing:.05em;
+
+  margin-bottom:5px;
+
+}
+
+.field input,
+.field select{
+
+  width:100%;
+
+  padding:10px 11px;
+
+  border-radius:8px;
+
+  border:1px solid var(--line);
+
+  background:var(--bg);
+
+  color:var(--text);
+
+  font-family:var(--mono);
+
+  font-size:13px;
+
+  outline:none;
+
+}
+
+.field input:focus,
+.field select:focus{
+
+  border-color:var(--accent-dim);
+
+}
+
+.field-row{
+
+  display:flex;
+
+  gap:8px;
+
+}
+
+.field-row .field{
+
+  flex:1;
+
+}
+
+.field-row .field.narrow{
+
+  flex:0 0 90px;
+
+}
+
+.settings-actions{
+
+  display:flex;
+
+  gap:8px;
+
+  margin-top:2px;
+
+}
+
+.btn{
+
+  flex:1;
+
+  padding:10px;
+
+  border-radius:8px;
+
+  border:1px solid var(--line);
+
+  background:var(--panel);
+
+  color:var(--text);
+
+  font-family:var(--mono);
+
+  font-size:12px;
+
+  text-transform:uppercase;
+
+  letter-spacing:.04em;
+
+  cursor:pointer;
+
+}
+
+.btn.primary{
+
+  background:var(--accent-dim);
+
+  border-color:var(--accent-dim);
+
+  color:#04150d;
+
+  font-weight:600;
+
+}
+
+.settings-hint{
+
+  font-size:11px;
+
+  color:var(--text-dim);
+
+  line-height:1.5;
+
+}
+
+
+/* CHAT */
+
+#chat{
+
+  flex:1 1 auto;
+
+  overflow-y:auto;
+
+  padding:16px 12px 8px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:14px;
+
+  -webkit-overflow-scrolling:touch;
+
+}
+
+.empty-state{
+
+  margin:auto;
+
+  text-align:center;
+
+  color:var(--text-dim);
+
+  padding:0 30px;
+
+  font-size:13px;
+
+  line-height:1.6;
+
+}
+
+.empty-state .em-icon{
+
+  font-family:var(--mono);
+
+  color:var(--accent);
+
+  font-size:22px;
+
+  display:block;
+
+  margin-bottom:10px;
+
+}
+
+.msg{
+
+  max-width:88%;
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:4px;
+
+}
+
+.msg.user{
+
+  align-self:flex-end;
+
+  align-items:flex-end;
+
+}
+
+.msg.assistant{
+
+  align-self:flex-start;
+
+  align-items:flex-start;
+
+}
+
+.bubble{
+
+  padding:10px 13px;
+
+  border-radius:14px;
+
+  font-size:14.5px;
+
+  line-height:1.5;
+
+  white-space:pre-wrap;
+
+  word-wrap:break-word;
+
+}
+
+.msg.user .bubble{
+
+  background:var(--user);
+
+  border:1px solid var(--line);
+
+  border-bottom-right-radius:4px;
+
+  color:#ffffff;
+
+}
+
+.msg.assistant .bubble{
+
+  background:var(--panel);
+
+  border:1px solid var(--line);
+
+  border-bottom-left-radius:4px;
+
+}
+
+.msg.assistant .bubble.error{
+
+  border-color:var(--danger);
+
+  color:#ffb3ac;
+
+}
+
+.cursor{
+
+  display:inline-block;
+
+  width:7px;
+
+  height:14px;
+
+  background:var(--accent);
+
+  margin-left:2px;
+
+  vertical-align:text-bottom;
+
+  animation:blink .9s step-start infinite;
+
+}
+
+@keyframes blink{
+
+  50%{
+    opacity:0;
   }
 
-  /* SETTINGS PANEL */
-  #settings{
-    flex:0 0 auto;
-    max-height:0;
-    overflow:hidden;
-    background:var(--panel-2);
-    border-bottom:1px solid var(--line);
-    transition: max-height .25s ease;
-  }
-  #settings.open{ max-height:260px; }
-  .settings-inner{ padding:14px; display:flex; flex-direction:column; gap:10px; }
-  .field label{
-    display:block; font-size:11px; color:var(--text-dim); font-family:var(--mono);
-    text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;
-  }
-  .field input{
-    width:100%; padding:10px 11px; border-radius:8px;
-    border:1px solid var(--line); background:var(--bg); color:var(--text);
-    font-family:var(--mono); font-size:13px; outline:none;
-  }
-  .field input:focus{ border-color:var(--accent-dim); }
-  .field-row{ display:flex; gap:8px; }
-  .field-row .field{ flex:1; }
-  .field-row .field.narrow{ flex:0 0 90px; }
-  .settings-actions{ display:flex; gap:8px; margin-top:2px; }
-  .btn{
-    flex:1; padding:10px; border-radius:8px; border:1px solid var(--line);
-    background:var(--panel); color:var(--text); font-family:var(--mono);
-    font-size:12px; text-transform:uppercase; letter-spacing:.04em;
-    cursor:pointer;
-  }
-  .btn.primary{ background:var(--accent-dim); border-color:var(--accent-dim); color:#04150d; font-weight:600;}
-  .settings-hint{ font-size:11px; color:var(--text-dim); line-height:1.5; }
+}
 
-  /* CHAT */
-  #chat{
-    flex:1 1 auto;
-    overflow-y:auto;
-    padding:16px 12px 8px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    -webkit-overflow-scrolling:touch;
-  }
-  .empty-state{
-    margin:auto; text-align:center; color:var(--text-dim);
-    padding:0 30px; font-size:13px; line-height:1.6;
-  }
-  .empty-state .em-icon{ font-family:var(--mono); color:var(--accent); font-size:22px; display:block; margin-bottom:10px; }
+.stats{
 
-  .msg{ max-width:88%; display:flex; flex-direction:column; gap:4px; }
-  .msg.user{ align-self:flex-end; align-items:flex-end; }
-  .msg.assistant{ align-self:flex-start; align-items:flex-start; }
-  .bubble{
-    padding:10px 13px; border-radius:14px; font-size:14.5px; line-height:1.5;
-    white-space:pre-wrap; word-wrap:break-word;
-  }
-  .msg.user .bubble{ background:var(--user); border:1px solid var(--line); border-bottom-right-radius:4px; }
-  .msg.assistant .bubble{ background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px; }
-  .msg.assistant .bubble.error{ border-color:var(--danger); color:#ffb3ac; }
-  .cursor{ display:inline-block; width:7px; height:14px; background:var(--accent); margin-left:2px; vertical-align:text-bottom; animation:blink 0.9s step-start infinite; }
-  @keyframes blink{ 50%{ opacity:0; } }
+  font-family:var(--mono);
 
-  .stats{
-    font-family:var(--mono); font-size:10.5px; color:var(--text-dim);
-    display:flex; gap:9px; flex-wrap:wrap; padding:0 3px;
-  }
-  .stats span{ white-space:nowrap; }
-  .stats b{ color:var(--accent); font-weight:600; }
+  font-size:10.5px;
 
-  /* INPUT BAR */
-  #inputbar{
-    flex:0 0 auto;
-    border-top:1px solid var(--line);
-    background:var(--panel);
-    padding:10px 10px max(10px, env(safe-area-inset-bottom));
-  }
-  .input-row{ display:flex; align-items:flex-end; gap:8px; }
-  #prompt{
-    flex:1; resize:none; max-height:120px; min-height:22px;
-    background:var(--bg); border:1px solid var(--line); border-radius:18px;
-    color:var(--text); font-family:var(--sans); font-size:15px;
-    padding:10px 15px; outline:none; line-height:1.4;
-  }
-  #prompt:focus{ border-color:var(--accent-dim); }
-  #send{
-    flex:0 0 auto; width:40px; height:40px; border-radius:50%;
-    border:none; background:var(--accent); color:#04150d;
-    font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;
-  }
-  #send:disabled{ background:var(--line); color:var(--text-dim); }
-  #send.stop{ background:var(--danger); color:#210503; }
+  color:var(--text-dim);
 
-  ::-webkit-scrollbar{ width:6px; }
-  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
-</style>
-</head>
-<body>
+  display:flex;
 
-<header>
-  <div class="head-row">
-    <div class="logo" id="statusDot"></div>
-    <h1>LM Studio Console</h1>
-    <div class="head-sub" id="modelLabel">not connected</div>
-    <button class="gear" id="gearBtn" aria-label="Settings">⚙</button>
-  </div>
-</header>
+  gap:9px;
 
-<div id="settings">
-  <div class="settings-inner">
-    <div class="field-row">
-      <div class="field" style="flex:2">
-        <label for="hostInput">Server address (IP of the LM Studio machine)</label>
-        <input id="hostInput" type="text" placeholder="192.168.1.42" inputmode="decimal">
-      </div>
-      <div class="field narrow">
-        <label for="portInput">Port</label>
-        <input id="portInput" type="text" placeholder="1234" inputmode="numeric">
-      </div>
-    </div>
-    <div class="field">
-      <label for="sysInput">System prompt (optional)</label>
-      <input id="sysInput" type="text" placeholder="You are a helpful assistant.">
-    </div>
-    <div class="settings-actions">
-      <button class="btn" id="testBtn">Test connection</button>
-      <button class="btn primary" id="saveBtn">Save</button>
-    </div>
-    <div class="settings-hint">
-      In LM Studio, open the Developer / Local Server tab, load a model, and start the server with "Serve on Local Network" enabled. Enter that machine's LAN IP and port above — both devices need to be on the same Wi-Fi/network.
-    </div>
-  </div>
+  flex-wrap:wrap;
+
+  padding:0 3px;
+
+}
+
+.stats span{
+
+  white-space:nowrap;
+
+}
+
+.stats b{
+
+  color:var(--accent);
+
+  font-weight:600;
+
+}
+
+
+/* INPUT */
+
+#inputbar{
+
+  flex:0 0 auto;
+
+  border-top:1px solid var(--line);
+
+  background:var(--panel);
+
+  padding:
+    10px
+    10px
+    max(10px, env(safe-area-inset-bottom));
+
+}
+
+.input-row{
+
+  display:flex;
+
+  align-items:flex-end;
+
+  gap:8px;
+
+}
+
+#prompt{
+
+  flex:1;
+
+  resize:none;
+
+  max-height:120px;
+
+  min-height:22px;
+
+  background:var(--bg);
+
+  border:1px solid var(--line);
+
+  border-radius:18px;
+
+  color:var(--text);
+
+  font-family:var(--sans);
+
+  font-size:15px;
+
+  padding:10px 15px;
+
+  outline:none;
+
+  line-height:1.4;
+
+}
+
+#prompt:focus{
+
+  border-color:var(--accent-dim);
+
+}
+
+#send{
+
+  flex:0 0 auto;
+
+  width:40px;
+
+  height:40px;
+
+  border-radius:50%;
+
+  border:none;
+
+  background:var(--accent);
+
+  color:#04150d;
+
+  font-size:17px;
+
+  cursor:pointer;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+}
+
+#send:disabled{
+
+  background:var(--line);
+
+  color:var(--text-dim);
+
+}
+
+#send.stop{
+
+  background:var(--danger);
+
+  color:#210503;
+
+}
+
+
+/* LIGHT THEME OVERRIDES */
+
+body.light-theme .msg.user .bubble{
+
+  color:#ffffff;
+
+}
+
+body.light-theme .cursor{
+
+  background:#111111;
+
+}
+
+body.light-theme .btn.primary{
+
+  color:#ffffff;
+
+}
+
+body.light-theme .logo.online{
+
+  box-shadow:
+    0 0 0 3px
+    rgba(38,122,59,.15);
+
+}
+
+body.light-theme .stats b{
+
+  color:#267a3b;
+
+}
+
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar{
+
+  width:6px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+  background:var(--line);
+
+  border-radius:3px;
+
+}
+
+</style></head><body><header>  <div class="head-row"><div
+  class="logo"
+  id="statusDot"
+></div>
+
+<h1>
+  LM Studio Console
+</h1>
+
+<div
+  class="head-sub"
+  id="modelLabel"
+>
+  not connected
 </div>
 
-<div id="chat">
-  <div class="empty-state" id="emptyState">
-    <span class="em-icon">▍▍▍</span>
-    Point this at your LM Studio server's IP in ⚙ settings, then say hello.
+<button
+  class="gear"
+  id="gearBtn"
+  aria-label="Settings"
+>
+  ⚙
+</button>
+
+  </div></header><div id="settings">  <div class="settings-inner"><div class="field-row">
+
+  <div
+    class="field"
+    style="flex:2"
+  >
+
+    <label for="hostInput">
+      Server address
+    </label>
+
+    <input
+      id="hostInput"
+      type="text"
+      placeholder="192.168.1.42"
+      inputmode="decimal"
+    >
+
   </div>
+
+  <div class="field narrow">
+
+    <label for="portInput">
+      Port
+    </label>
+
+    <input
+      id="portInput"
+      type="text"
+      placeholder="1234"
+      inputmode="numeric"
+    >
+
+  </div>
+
 </div>
 
-<div id="inputbar">
-  <div class="input-row">
-    <textarea id="prompt" rows="1" placeholder="Message the model…"></textarea>
-    <button id="send" aria-label="Send">↑</button>
-  </div>
+
+<div class="field">
+
+  <label for="sysInput">
+    System prompt
+  </label>
+
+  <input
+    id="sysInput"
+    type="text"
+    placeholder="You are a helpful assistant."
+  >
+
 </div>
 
-<script>
+
+<div class="field">
+
+  <label for="themeInput">
+    Appearance
+  </label>
+
+  <select id="themeInput">
+
+    <option value="dark">
+      Dark Console
+    </option>
+
+    <option value="light">
+      Light Clean
+    </option>
+
+  </select>
+
+</div>
+
+
+<div class="settings-actions">
+
+  <button
+    class="btn"
+    id="testBtn"
+  >
+    Test connection
+  </button>
+
+  <button
+    class="btn primary"
+    id="saveBtn"
+  >
+    Save
+  </button>
+
+</div>
+
+
+<div class="settings-hint">
+
+  In LM Studio, open the Developer / Local Server tab, load a model, and start the server with "Serve on Local Network" enabled. Enter that machine's LAN IP and port above — both devices need to be on the same Wi-Fi/network.
+
+</div>
+
+  </div></div><div id="chat">  <div
+    class="empty-state"
+    id="emptyState"
+  ><span class="em-icon">
+  ▍▍▍
+</span>
+
+Point this at your LM Studio server's IP in ⚙ settings, then say hello.
+
+  </div></div><div id="inputbar">  <div class="input-row"><textarea
+  id="prompt"
+  rows="1"
+  placeholder="Message the model…"
+></textarea>
+
+<button
+  id="send"
+  aria-label="Send"
+>
+  ↑
+</button>
+
+  </div></div><script>
+
 (function(){
-  const $ = id => document.getElementById(id);
-  const chatEl = $('chat'), emptyState = $('emptyState');
-  const promptEl = $('prompt'), sendBtn = $('send');
-  const settingsEl = $('settings'), gearBtn = $('gearBtn');
-  const hostInput = $('hostInput'), portInput = $('portInput'), sysInput = $('sysInput');
-  const testBtn = $('testBtn'), saveBtn = $('saveBtn');
-  const statusDot = $('statusDot'), modelLabel = $('modelLabel');
+
+  const $ =
+    id => document.getElementById(id);
+
+
+  const chatEl =
+    $('chat');
+
+  const emptyState =
+    $('emptyState');
+
+  const promptEl =
+    $('prompt');
+
+  const sendBtn =
+    $('send');
+
+  const settingsEl =
+    $('settings');
+
+  const gearBtn =
+    $('gearBtn');
+
+  const hostInput =
+    $('hostInput');
+
+  const portInput =
+    $('portInput');
+
+  const sysInput =
+    $('sysInput');
+
+  const themeInput =
+    $('themeInput');
+
+  const testBtn =
+    $('testBtn');
+
+  const saveBtn =
+    $('saveBtn');
+
+  const statusDot =
+    $('statusDot');
+
+  const modelLabel =
+    $('modelLabel');
+
 
   const store = {
-    get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; } catch(e){ return d; } },
-    set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+    get(k, d){
+
+      try{
+
+        return JSON.parse(
+          localStorage.getItem(k)
+        ) ?? d;
+
+      }catch(e){
+
+        return d;
+
+      }
+
+    },
+
+    set(k, v){
+
+      localStorage.setItem(
+        k,
+        JSON.stringify(v)
+      );
+
+    }
+
   };
 
-  let cfg = store.get('lms_cfg', { host:'', port:'1234', sys:'' });
-  hostInput.value = cfg.host; portInput.value = cfg.port; sysInput.value = cfg.sys;
 
-  let history = store.get('lms_history', []); // [{role, content}]
-  let currentModel = store.get('lms_model', '');
-  let controller = null;
-  let generating = false;
+  let cfg =
+    store.get(
+      'lms_cfg',
+      {
+        host:'',
+        port:'1234',
+        sys:'',
+        theme:'dark'
+      }
+    );
+
+
+  hostInput.value =
+    cfg.host;
+
+  portInput.value =
+    cfg.port;
+
+  sysInput.value =
+    cfg.sys;
+
+  themeInput.value =
+    cfg.theme || 'dark';
+
+
+  let history =
+    store.get(
+      'lms_history',
+      []
+    );
+
+
+  let currentModel =
+    store.get(
+      'lms_model',
+      ''
+    );
+
+
+  let controller =
+    null;
+
+
+  let generating =
+    false;
+
+
+  function applyTheme(theme){
+
+    document.body.classList.toggle(
+      'light-theme',
+      theme === 'light'
+    );
+
+    themeInput.value =
+      theme;
+
+  }
+
+
+  applyTheme(
+    cfg.theme || 'dark'
+  );
+
 
   function baseUrl(){
-    const h = (hostInput.value || cfg.host || '').trim();
-    const p = (portInput.value || cfg.port || '1234').trim();
-    if(!h) return null;
+
+    const h =
+      (
+        hostInput.value ||
+        cfg.host ||
+        ''
+      ).trim();
+
+
+    const p =
+      (
+        portInput.value ||
+        cfg.port ||
+        '1234'
+      ).trim();
+
+
+    if(!h){
+
+      return null;
+
+    }
+
+
     return `http://${h}:${p}`;
+
   }
 
-  function setStatus(state){ // 'offline' | 'online' | 'busy'
-    statusDot.className = 'logo' + (state === 'offline' ? '' : ' ' + state);
+
+  function setStatus(state){
+
+    statusDot.className =
+      'logo' +
+      (
+        state === 'offline'
+          ? ''
+          : ' ' + state
+      );
+
   }
+
 
   function renderEmpty(){
-    emptyState.style.display = history.length ? 'none' : 'block';
+
+    emptyState.style.display =
+      history.length
+        ? 'none'
+        : 'block';
+
   }
+
 
   function scrollToBottom(){
-    chatEl.scrollTop = chatEl.scrollHeight;
+
+    chatEl.scrollTop =
+      chatEl.scrollHeight;
+
   }
 
-  function addMessage(role, content){
-    const msg = document.createElement('div');
-    msg.className = 'msg ' + role;
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = content;
-    msg.appendChild(bubble);
-    chatEl.appendChild(msg);
+
+  function addMessage(
+    role,
+    content
+  ){
+
+    const msg =
+      document.createElement(
+        'div'
+      );
+
+
+    msg.className =
+      'msg ' + role;
+
+
+    const bubble =
+      document.createElement(
+        'div'
+      );
+
+
+    bubble.className =
+      'bubble';
+
+
+    bubble.textContent =
+      content;
+
+
+    msg.appendChild(
+      bubble
+    );
+
+
+    chatEl.appendChild(
+      msg
+    );
+
+
     renderEmpty();
+
     scrollToBottom();
-    return { msg, bubble };
+
+
+    return {
+
+      msg,
+
+      bubble
+
+    };
+
   }
 
-  function addStats(msgEl, text){
-    const s = document.createElement('div');
-    s.className = 'stats';
-    s.innerHTML = text;
-    msgEl.appendChild(s);
+
+  function addStats(
+    msgEl,
+    text
+  ){
+
+    const s =
+      document.createElement(
+        'div'
+      );
+
+
+    s.className =
+      'stats';
+
+
+    s.innerHTML =
+      text;
+
+
+    msgEl.appendChild(
+      s
+    );
+
+
     scrollToBottom();
+
   }
 
-  function fmt(n, d=1){ return (Math.round(n * Math.pow(10,d)) / Math.pow(10,d)).toFixed(d); }
 
-  async function testConnection(silent){
-    const url = baseUrl();
-    if(!url){ if(!silent) alert('Enter a server address first.'); setStatus('offline'); return false; }
-    setStatus('busy');
-    try{
-      const res = await fetch(url + '/v1/models', { method:'GET' });
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const model = data?.data?.[0]?.id || 'unknown model';
-      currentModel = model;
-      store.set('lms_model', model);
-      modelLabel.textContent = model;
-      setStatus('online');
-      return true;
-    }catch(err){
-      setStatus('offline');
-      modelLabel.textContent = 'not connected';
-      if(!silent) alert('Could not reach the server:\n' + err.message + '\n\nCheck the IP/port and that both devices share a network.');
+  function fmt(
+    n,
+    d=1
+  ){
+
+    return (
+
+      Math.round(
+        n *
+        Math.pow(
+          10,
+          d
+        )
+      ) /
+      Math.pow(
+        10,
+        d
+      )
+
+    ).toFixed(d);
+
+  }
+
+
+  async function testConnection(
+    silent
+  ){
+
+    const url =
+      baseUrl();
+
+
+    if(!url){
+
+      if(!silent){
+
+        alert(
+          'Enter a server address first.'
+        );
+
+      }
+
+
+      setStatus(
+        'offline'
+      );
+
+
       return false;
+
     }
+
+
+    setStatus(
+      'busy'
+    );
+
+
+    try{
+
+      const res =
+        await fetch(
+          url +
+          '/v1/models',
+          {
+            method:'GET'
+          }
+        );
+
+
+      if(!res.ok){
+
+        throw new Error(
+          'HTTP ' +
+          res.status
+        );
+
+      }
+
+
+      const data =
+        await res.json();
+
+
+      const model =
+        data?.data?.[0]?.id ||
+        'unknown model';
+
+
+      currentModel =
+        model;
+
+
+      store.set(
+        'lms_model',
+        model
+      );
+
+
+      modelLabel.textContent =
+        model;
+
+
+      setStatus(
+        'online'
+      );
+
+
+      return true;
+
+
+    }catch(err){
+
+      setStatus(
+        'offline'
+      );
+
+
+      modelLabel.textContent =
+        'not connected';
+
+
+      if(!silent){
+
+        alert(
+          'Could not reach the server:\n' +
+          err.message +
+          '\n\nCheck the IP/port and that both devices share a network.'
+        );
+
+      }
+
+
+      return false;
+
+    }
+
   }
 
-  gearBtn.addEventListener('click', () => settingsEl.classList.toggle('open'));
 
-  saveBtn.addEventListener('click', async () => {
-    cfg = { host: hostInput.value.trim(), port: (portInput.value.trim() || '1234'), sys: sysInput.value.trim() };
-    store.set('lms_cfg', cfg);
-    await testConnection(true);
-    settingsEl.classList.remove('open');
-  });
+  gearBtn.addEventListener(
+    'click',
+    () => {
 
-  testBtn.addEventListener('click', () => testConnection(false));
+      settingsEl.classList.toggle(
+        'open'
+      );
 
-  promptEl.addEventListener('input', () => {
-    promptEl.style.height = 'auto';
-    promptEl.style.height = Math.min(promptEl.scrollHeight, 120) + 'px';
-  });
-
-  promptEl.addEventListener('keydown', (e) => {
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      handleSend();
     }
-  });
+  );
 
-  sendBtn.addEventListener('click', () => {
-    if(generating){ stopGeneration(); } else { handleSend(); }
-  });
+
+  themeInput.addEventListener(
+    'change',
+    () => {
+
+      applyTheme(
+        themeInput.value
+      );
+
+    }
+  );
+
+
+  saveBtn.addEventListener(
+    'click',
+    async () => {
+
+
+      cfg = {
+
+        host:
+          hostInput.value.trim(),
+
+        port:
+          portInput.value.trim() ||
+          '1234',
+
+        sys:
+          sysInput.value.trim(),
+
+        theme:
+          themeInput.value
+
+      };
+
+
+      store.set(
+        'lms_cfg',
+        cfg
+      );
+
+
+      applyTheme(
+        cfg.theme
+      );
+
+
+      await testConnection(
+        true
+      );
+
+
+      settingsEl.classList.remove(
+        'open'
+      );
+
+    }
+  );
+
+
+  testBtn.addEventListener(
+    'click',
+    () => {
+
+      testConnection(
+        false
+      );
+
+    }
+  );
+
+
+  promptEl.addEventListener(
+    'input',
+    () => {
+
+      promptEl.style.height =
+        'auto';
+
+
+      promptEl.style.height =
+        Math.min(
+          promptEl.scrollHeight,
+          120
+        ) +
+        'px';
+
+    }
+  );
+
+
+  promptEl.addEventListener(
+    'keydown',
+    e => {
+
+      if(
+
+        e.key ===
+        'Enter' &&
+
+        !e.shiftKey
+
+      ){
+
+        e.preventDefault();
+
+        handleSend();
+
+      }
+
+    }
+  );
+
+
+  sendBtn.addEventListener(
+    'click',
+    () => {
+
+      if(generating){
+
+        stopGeneration();
+
+      }else{
+
+        handleSend();
+
+      }
+
+    }
+  );
+
 
   function stopGeneration(){
-    if(controller) controller.abort();
+
+    if(controller){
+
+      controller.abort();
+
+    }
+
   }
 
-  function setGenerating(state){
-    generating = state;
-    sendBtn.textContent = state ? '■' : '↑';
-    sendBtn.classList.toggle('stop', state);
-    setStatus(state ? 'busy' : (currentModel ? 'online' : 'offline'));
+
+  function setGenerating(
+    state
+  ){
+
+    generating =
+      state;
+
+
+    sendBtn.textContent =
+      state
+        ? '■'
+        : '↑';
+
+
+    sendBtn.classList.toggle(
+      'stop',
+      state
+    );
+
+
+    setStatus(
+
+      state
+        ? 'busy'
+        : (
+          currentModel
+            ? 'online'
+            : 'offline'
+        )
+
+    );
+
   }
+
 
   async function handleSend(){
-    const text = promptEl.value.trim();
-    if(!text || generating) return;
-    const url = baseUrl();
-    if(!url){ settingsEl.classList.add('open'); return; }
 
-    history.push({ role:'user', content:text });
-    store.set('lms_history', history);
-    addMessage('user', text);
-    promptEl.value = '';
-    promptEl.style.height = 'auto';
+    const text =
+      promptEl.value.trim();
 
-    const messages = [];
-    if(cfg.sys) messages.push({ role:'system', content: cfg.sys });
-    messages.push(...history);
 
-    const { msg: aMsg, bubble: aBubble } = addMessage('assistant', '');
-    aBubble.innerHTML = '<span class="cursor"></span>';
+    if(
 
-    setGenerating(true);
-    controller = new AbortController();
-    const t0 = performance.now();
-    let firstTokenAt = null;
-    let fullText = '';
-    let tokenCount = 0;
+      !text ||
+      generating
 
-    try{
-      const res = await fetch(url + '/v1/chat/completions', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: currentModel || 'local-model',
-          messages,
-          stream: true,
-          temperature: 0.7
-        })
+    ){
+
+      return;
+
+    }
+
+
+    const url =
+      baseUrl();
+
+
+    if(!url){
+
+      settingsEl.classList.add(
+        'open'
+      );
+
+
+      return;
+
+    }
+
+
+    history.push({
+
+      role:
+        'user',
+
+      content:
+        text
+
+    });
+
+
+    store.set(
+      'lms_history',
+      history
+    );
+
+
+    addMessage(
+      'user',
+      text
+    );
+
+
+    promptEl.value =
+      '';
+
+
+    promptEl.style.height =
+      'auto';
+
+
+    const messages =
+      [];
+
+
+    if(cfg.sys){
+
+      messages.push({
+
+        role:
+          'system',
+
+        content:
+          cfg.sys
+
       });
 
-      if(!res.ok || !res.body){
-        throw new Error('HTTP ' + res.status);
+    }
+
+
+    messages.push(
+      ...history
+    );
+
+
+    const {
+
+      msg:aMsg,
+
+      bubble:aBubble
+
+    } =
+      addMessage(
+        'assistant',
+        ''
+      );
+
+
+    aBubble.innerHTML =
+      '<span class="cursor"></span>';
+
+
+    setGenerating(
+      true
+    );
+
+
+    controller =
+      new AbortController();
+
+
+    const t0 =
+      performance.now();
+
+
+    let firstTokenAt =
+      null;
+
+
+    let fullText =
+      '';
+
+
+    let tokenCount =
+      0;
+
+
+    try{
+
+
+      const res =
+        await fetch(
+
+          url +
+          '/v1/chat/completions',
+
+          {
+
+            method:
+              'POST',
+
+            headers:{
+
+              'Content-Type':
+                'application/json'
+
+            },
+
+            signal:
+              controller.signal,
+
+            body:
+              JSON.stringify({
+
+                model:
+                  currentModel ||
+                  'local-model',
+
+                messages,
+
+                stream:
+                  true,
+
+                temperature:
+                  0.7
+
+              })
+
+          }
+
+        );
+
+
+      if(
+
+        !res.ok ||
+        !res.body
+
+      ){
+
+        throw new Error(
+          'HTTP ' +
+          res.status
+        );
+
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
+
+      const reader =
+        res.body.getReader();
+
+
+      const decoder =
+        new TextDecoder();
+
+
+      let buf =
+        '';
+
 
       while(true){
-        const { done, value } = await reader.read();
-        if(done) break;
-        buf += decoder.decode(value, { stream:true });
-        const lines = buf.split('\n');
-        buf = lines.pop();
-        for(const line of lines){
-          const t = line.trim();
-          if(!t.startsWith('data:')) continue;
-          const payload = t.slice(5).trim();
-          if(payload === '[DONE]') continue;
-          try{
-            const json = JSON.parse(payload);
-            const delta = json.choices?.[0]?.delta?.content;
-            if(delta){
-              if(firstTokenAt === null) firstTokenAt = performance.now();
-              fullText += delta;
-              tokenCount++;
-              aBubble.innerHTML = '';
-              aBubble.appendChild(document.createTextNode(fullText));
-              const cur = document.createElement('span');
-              cur.className = 'cursor';
-              aBubble.appendChild(cur);
-              scrollToBottom();
-            }
-            if(json.model) currentModel = json.model;
-          }catch(e){ /* skip malformed chunk */ }
+
+        const {
+
+          done,
+
+          value
+
+        } =
+          await reader.read();
+
+
+        if(done){
+
+          break;
+
         }
+
+
+        buf +=
+          decoder.decode(
+            value,
+            {
+              stream:true
+            }
+          );
+
+
+        const lines =
+          buf.split(
+            '\n'
+          );
+
+
+        buf =
+          lines.pop();
+
+
+        for(
+
+          const line
+          of lines
+
+        ){
+
+          const t =
+            line.trim();
+
+
+          if(
+
+            !t.startsWith(
+              'data:'
+            )
+
+          ){
+
+            continue;
+
+          }
+
+
+          const payload =
+            t.slice(
+              5
+            ).trim();
+
+
+          if(
+
+            payload ===
+            '[DONE]'
+
+          ){
+
+            continue;
+
+          }
+
+
+          try{
+
+            const json =
+              JSON.parse(
+                payload
+              );
+
+
+            const delta =
+              json
+                .choices?.[0]
+                ?.delta
+                ?.content;
+
+
+            if(delta){
+
+              if(
+
+                firstTokenAt ===
+                null
+
+              ){
+
+                firstTokenAt =
+                  performance.now();
+
+              }
+
+
+              fullText +=
+                delta;
+
+
+              tokenCount++;
+
+
+              aBubble.innerHTML =
+                '';
+
+
+              aBubble.appendChild(
+
+                document.createTextNode(
+                  fullText
+                )
+
+              );
+
+
+              const cur =
+                document.createElement(
+                  'span'
+                );
+
+
+              cur.className =
+                'cursor';
+
+
+              aBubble.appendChild(
+                cur
+              );
+
+
+              scrollToBottom();
+
+            }
+
+
+            if(json.model){
+
+              currentModel =
+                json.model;
+
+            }
+
+
+          }catch(e){
+
+            /* Ignore incomplete chunks */
+
+          }
+
+        }
+
       }
 
-      const t1 = performance.now();
-      aBubble.textContent = fullText || '(empty response)';
-      const totalS = (t1 - t0) / 1000;
-      const genS = firstTokenAt ? (t1 - firstTokenAt) / 1000 : totalS;
-      const ttft = firstTokenAt ? (firstTokenAt - t0) / 1000 : totalS;
-      const tps = genS > 0 ? tokenCount / genS : 0;
-      addStats(aMsg, `<span>model: <b>${currentModel || '—'}</b></span><span>ttft: <b>${fmt(ttft,2)}s</b></span><span>tok/s: <b>${fmt(tps,1)}</b></span><span>chunks: <b>${tokenCount}</b></span><span>total: <b>${fmt(totalS,2)}s</b></span>`);
 
-      history.push({ role:'assistant', content: fullText });
-      store.set('lms_history', history);
-      modelLabel.textContent = currentModel || 'connected';
-      setStatus('online');
+      const t1 =
+        performance.now();
+
+
+      aBubble.textContent =
+        fullText ||
+        '(empty response)';
+
+
+      const totalS =
+        (
+          t1 -
+          t0
+        ) /
+        1000;
+
+
+      const genS =
+        firstTokenAt
+
+          ? (
+              t1 -
+              firstTokenAt
+            ) /
+            1000
+
+          : totalS;
+
+
+      const ttft =
+        firstTokenAt
+
+          ? (
+              firstTokenAt -
+              t0
+            ) /
+            1000
+
+          : totalS;
+
+
+      const tps =
+        genS > 0
+
+          ? tokenCount /
+            genS
+
+          : 0;
+
+
+      addStats(
+
+        aMsg,
+
+        `<span>model: <b>${currentModel || '—'}</b></span>
+         <span>ttft: <b>${fmt(ttft,2)}s</b></span>
+         <span>tok/s: <b>${fmt(tps,1)}</b></span>
+         <span>chunks: <b>${tokenCount}</b></span>
+         <span>total: <b>${fmt(totalS,2)}s</b></span>`
+
+      );
+
+
+      history.push({
+
+        role:
+          'assistant',
+
+        content:
+          fullText
+
+      });
+
+
+      store.set(
+        'lms_history',
+        history
+      );
+
+
+      modelLabel.textContent =
+        currentModel ||
+        'connected';
+
+
+      setStatus(
+        'online'
+      );
+
 
     }catch(err){
-      if(err.name === 'AbortError'){
-        aBubble.textContent = fullText || '(stopped)';
+
+
+      if(
+
+        err.name ===
+        'AbortError'
+
+      ){
+
+        aBubble.textContent =
+          fullText ||
+          '(stopped)';
+
+
         if(fullText){
-          history.push({ role:'assistant', content: fullText });
-          store.set('lms_history', history);
+
+          history.push({
+
+            role:
+              'assistant',
+
+            content:
+              fullText
+
+          });
+
+
+          store.set(
+            'lms_history',
+            history
+          );
+
         }
-      } else {
-        aBubble.classList.add('error');
-        aBubble.textContent = 'Error reaching server: ' + err.message;
-        setStatus('offline');
+
+
+      }else{
+
+
+        aBubble.classList.add(
+          'error'
+        );
+
+
+        aBubble.textContent =
+          'Error reaching server: ' +
+          err.message;
+
+
+        setStatus(
+          'offline'
+        );
+
       }
-    } finally {
-      setGenerating(false);
-      controller = null;
+
+
+    }finally{
+
+
+      setGenerating(
+        false
+      );
+
+
+      controller =
+        null;
+
     }
+
   }
 
-  // restore history
-  history.forEach(m => addMessage(m.role, m.content));
-  if(currentModel) modelLabel.textContent = currentModel;
+
+  history.forEach(
+
+    m => addMessage(
+      m.role,
+      m.content
+    )
+
+  );
+
+
+  if(currentModel){
+
+    modelLabel.textContent =
+      currentModel;
+
+  }
+
+
   renderEmpty();
 
-  // initial silent check if we have a saved host
-  if(cfg.host) testConnection(true);
-  else settingsEl.classList.add('open');
+
+  if(cfg.host){
+
+    testConnection(
+      true
+    );
+
+  }else{
+
+    settingsEl.classList.add(
+      'open'
+    );
+
+  }
+
 })();
-</script>
-</body>
+
+</script></body>
 </html>
