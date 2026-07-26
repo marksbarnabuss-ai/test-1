@@ -1,1098 +1,458 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>LM Studio Chat</title><style>
-    :root {
-        --bg: #f4f5f7;
-        --card: #ffffff;
-        --text: #17181a;
-        --muted: #73777d;
-        --border: #e1e3e6;
-        --accent: #111111;
-        --danger: #c62828;
-        --success: #267a3b;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>LM Studio · Local Console</title>
+<style>
+  :root{
+    --bg: #0d1210;
+    --panel: #121915;
+    --panel-2: #161f1a;
+    --line: #23302a;
+    --text: #e7efe9;
+    --text-dim: #8ba396;
+    --accent: #5ee6a3;
+    --accent-dim: #2f8d63;
+    --user: #1c2723;
+    --danger: #e6685e;
+    --mono: 'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(94,230,163,0.05), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    display:flex;
+    flex-direction:column;
+    height:100dvh;
+    overflow:hidden;
+  }
 
-    * {
-        box-sizing: border-box;
-    }
+  /* HEADER */
+  header{
+    flex:0 0 auto;
+    padding: max(12px, env(safe-area-inset-top)) 14px 10px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  .head-row{ display:flex; align-items:center; gap:10px; }
+  .logo{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--danger);
+    box-shadow:0 0 0 3px rgba(230,104,94,0.15);
+    flex:0 0 auto;
+    transition: background .2s, box-shadow .2s;
+  }
+  .logo.online{ background:var(--accent); box-shadow:0 0 0 3px rgba(94,230,163,0.15); }
+  .logo.busy{ background:#e6c25e; box-shadow:0 0 0 3px rgba(230,194,94,0.15); animation:pulse 1s infinite; }
+  @keyframes pulse{ 50%{opacity:.4;} }
+  h1{
+    font-size:14px; font-weight:600; letter-spacing:.02em; margin:0;
+    font-family:var(--mono);
+    text-transform:uppercase;
+  }
+  .head-sub{ font-size:11px; color:var(--text-dim); font-family:var(--mono); margin-left:auto; text-align:right; }
+  .gear{
+    background:none; border:none; color:var(--text-dim); font-size:18px;
+    padding:4px 2px; line-height:1; cursor:pointer;
+  }
 
-    body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: system-ui, -apple-system, BlinkMacSystemFont,
-                     "Segoe UI", sans-serif;
-    }
+  /* SETTINGS PANEL */
+  #settings{
+    flex:0 0 auto;
+    max-height:0;
+    overflow:hidden;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+    transition: max-height .25s ease;
+  }
+  #settings.open{ max-height:260px; }
+  .settings-inner{ padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .field label{
+    display:block; font-size:11px; color:var(--text-dim); font-family:var(--mono);
+    text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;
+  }
+  .field input{
+    width:100%; padding:10px 11px; border-radius:8px;
+    border:1px solid var(--line); background:var(--bg); color:var(--text);
+    font-family:var(--mono); font-size:13px; outline:none;
+  }
+  .field input:focus{ border-color:var(--accent-dim); }
+  .field-row{ display:flex; gap:8px; }
+  .field-row .field{ flex:1; }
+  .field-row .field.narrow{ flex:0 0 90px; }
+  .settings-actions{ display:flex; gap:8px; margin-top:2px; }
+  .btn{
+    flex:1; padding:10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); font-family:var(--mono);
+    font-size:12px; text-transform:uppercase; letter-spacing:.04em;
+    cursor:pointer;
+  }
+  .btn.primary{ background:var(--accent-dim); border-color:var(--accent-dim); color:#04150d; font-weight:600;}
+  .settings-hint{ font-size:11px; color:var(--text-dim); line-height:1.5; }
 
-    .app {
-        max-width: 720px;
-        min-height: 100vh;
-        margin: auto;
-        display: flex;
-        flex-direction: column;
-    }
+  /* CHAT */
+  #chat{
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding:16px 12px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .empty-state{
+    margin:auto; text-align:center; color:var(--text-dim);
+    padding:0 30px; font-size:13px; line-height:1.6;
+  }
+  .empty-state .em-icon{ font-family:var(--mono); color:var(--accent); font-size:22px; display:block; margin-bottom:10px; }
 
-    header {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: rgba(244, 245, 247, 0.94);
-        backdrop-filter: blur(14px);
-        border-bottom: 1px solid var(--border);
-        padding: 16px;
-    }
+  .msg{ max-width:88%; display:flex; flex-direction:column; gap:4px; }
+  .msg.user{ align-self:flex-end; align-items:flex-end; }
+  .msg.assistant{ align-self:flex-start; align-items:flex-start; }
+  .bubble{
+    padding:10px 13px; border-radius:14px; font-size:14.5px; line-height:1.5;
+    white-space:pre-wrap; word-wrap:break-word;
+  }
+  .msg.user .bubble{ background:var(--user); border:1px solid var(--line); border-bottom-right-radius:4px; }
+  .msg.assistant .bubble{ background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px; }
+  .msg.assistant .bubble.error{ border-color:var(--danger); color:#ffb3ac; }
+  .cursor{ display:inline-block; width:7px; height:14px; background:var(--accent); margin-left:2px; vertical-align:text-bottom; animation:blink 0.9s step-start infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
 
-    .header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-    }
+  .stats{
+    font-family:var(--mono); font-size:10.5px; color:var(--text-dim);
+    display:flex; gap:9px; flex-wrap:wrap; padding:0 3px;
+  }
+  .stats span{ white-space:nowrap; }
+  .stats b{ color:var(--accent); font-weight:600; }
 
-    h1 {
-        margin: 0;
-        font-size: 20px;
-        letter-spacing: -0.4px;
-    }
+  /* INPUT BAR */
+  #inputbar{
+    flex:0 0 auto;
+    border-top:1px solid var(--line);
+    background:var(--panel);
+    padding:10px 10px max(10px, env(safe-area-inset-bottom));
+  }
+  .input-row{ display:flex; align-items:flex-end; gap:8px; }
+  #prompt{
+    flex:1; resize:none; max-height:120px; min-height:22px;
+    background:var(--bg); border:1px solid var(--line); border-radius:18px;
+    color:var(--text); font-family:var(--sans); font-size:15px;
+    padding:10px 15px; outline:none; line-height:1.4;
+  }
+  #prompt:focus{ border-color:var(--accent-dim); }
+  #send{
+    flex:0 0 auto; width:40px; height:40px; border-radius:50%;
+    border:none; background:var(--accent); color:#04150d;
+    font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  #send:disabled{ background:var(--line); color:var(--text-dim); }
+  #send.stop{ background:var(--danger); color:#210503; }
 
-    .status {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 12px;
-        color: var(--muted);
-    }
-
-    .status-dot {
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: #aaa;
-    }
-
-    .status-dot.connected {
-        background: var(--success);
-    }
-
-    .status-dot.error {
-        background: var(--danger);
-    }
-
-    main {
-        flex: 1;
-        padding: 16px;
-        padding-bottom: 150px;
-    }
-
-    .setup-card,
-    .message {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-    }
-
-    .setup-card {
-        padding: 16px;
-        margin-bottom: 16px;
-    }
-
-    .setup-card h2 {
-        font-size: 15px;
-        margin: 0 0 14px;
-    }
-
-    label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--muted);
-        margin-bottom: 6px;
-    }
-
-    input,
-    select,
-    textarea,
-    button {
-        font: inherit;
-    }
-
-    input,
-    select {
-        width: 100%;
-        padding: 11px 12px;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        background: #fff;
-        color: var(--text);
-        outline: none;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-        border-color: #888;
-    }
-
-    .field {
-        margin-bottom: 12px;
-    }
-
-    .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    button {
-        border: 0;
-        border-radius: 10px;
-        padding: 11px 14px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .button-secondary {
-        background: #eceef0;
-        color: var(--text);
-    }
-
-    button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .messages {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .message {
-        padding: 14px;
-        line-height: 1.55;
-        overflow-wrap: anywhere;
-    }
-
-    .message.user {
-        background: var(--accent);
-        color: white;
-        border-color: var(--accent);
-        margin-left: 28px;
-    }
-
-    .message.assistant {
-        margin-right: 12px;
-    }
-
-    .message-label {
-        font-size: 11px;
-        font-weight: 700;
-        opacity: 0.6;
-        margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .message-content {
-        white-space: pre-wrap;
-    }
-
-    .cursor {
-        display: inline-block;
-        width: 7px;
-        height: 16px;
-        background: currentColor;
-        margin-left: 3px;
-        vertical-align: -2px;
-        animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-        50% {
-            opacity: 0;
-        }
-    }
-
-    .response-info {
-        margin-top: 12px;
-        border-top: 1px solid var(--border);
-        padding-top: 10px;
-    }
-
-    .response-info summary {
-        cursor: pointer;
-        font-size: 12px;
-        color: var(--muted);
-    }
-
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-        margin-top: 10px;
-    }
-
-    .stat {
-        background: #f5f6f7;
-        border-radius: 10px;
-        padding: 9px;
-    }
-
-    .stat-title {
-        color: var(--muted);
-        font-size: 10px;
-        text-transform: uppercase;
-    }
-
-    .stat-value {
-        margin-top: 3px;
-        font-weight: 700;
-        font-size: 14px;
-    }
-
-    .raw-response {
-        margin-top: 10px;
-        background: #18191b;
-        color: #e7e7e7;
-        padding: 10px;
-        border-radius: 10px;
-        overflow-x: auto;
-        font-size: 11px;
-        white-space: pre-wrap;
-    }
-
-    .composer {
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: min(720px, 100%);
-        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-        background: rgba(244, 245, 247, 0.96);
-        backdrop-filter: blur(14px);
-        border-top: 1px solid var(--border);
-    }
-
-    .composer-row {
-        display: flex;
-        gap: 8px;
-        align-items: flex-end;
-    }
-
-    textarea {
-        flex: 1;
-        resize: none;
-        min-height: 44px;
-        max-height: 140px;
-        padding: 12px;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        background: white;
-        outline: none;
-    }
-
-    .send-button {
-        height: 44px;
-        width: 54px;
-        padding: 0;
-        background: var(--accent);
-        color: white;
-        font-size: 18px;
-    }
-
-    .typing {
-        color: var(--muted);
-        font-size: 13px;
-        padding: 6px 4px;
-    }
-
-    .error {
-        color: var(--danger);
-        font-size: 13px;
-        margin-top: 8px;
-    }
-
-    @media (min-width: 600px) {
-        main {
-            padding: 24px;
-        }
-
-        header {
-            padding: 18px 24px;
-        }
-
-        .composer {
-            padding-left: 24px;
-            padding-right: 24px;
-        }
-    }
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
 </style>
+</head>
+<body>
 
-</head><body><div class="app"><header>
-    <div class="header-row">
-        <h1>LM Studio Chat</h1>
-
-        <div class="status">
-            <span id="statusDot" class="status-dot"></span>
-            <span id="statusText">Not connected</span>
-        </div>
-    </div>
+<header>
+  <div class="head-row">
+    <div class="logo" id="statusDot"></div>
+    <h1>LM Studio Console</h1>
+    <div class="head-sub" id="modelLabel">not connected</div>
+    <button class="gear" id="gearBtn" aria-label="Settings">⚙</button>
+  </div>
 </header>
 
-<main>
-
-    <section class="setup-card">
-
-        <h2>Connection</h2>
-
-        <div class="field">
-            <label for="serverUrl">
-                LM Studio Server URL
-            </label>
-
-            <input
-                id="serverUrl"
-                type="text"
-                value="http://192.168.1.100:1234"
-                placeholder="http://192.168.1.100:1234"
-            >
-        </div>
-
-        <div class="field">
-            <label for="model">
-                Model
-            </label>
-
-            <select id="model">
-                <option value="">
-                    Load models first
-                </option>
-            </select>
-        </div>
-
-        <div class="row">
-
-            <div class="field">
-                <label for="temperature">
-                    Temperature
-                </label>
-
-                <input
-                    id="temperature"
-                    type="number"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value="0.7"
-                >
-            </div>
-
-            <div class="field">
-                <label for="maxTokens">
-                    Max Tokens
-                </label>
-
-                <input
-                    id="maxTokens"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value="512"
-                >
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <button
-                class="button-secondary"
-                onclick="loadModels()"
-            >
-                Load Models
-            </button>
-
-            <button
-                class="button-secondary"
-                onclick="testConnection()"
-            >
-                Test Connection
-            </button>
-
-        </div>
-
-        <div
-            id="connectionError"
-            class="error"
-        ></div>
-
-    </section>
-
-    <section
-        id="messages"
-        class="messages"
-    >
-
-        <div class="message assistant">
-
-            <div class="message-label">
-                Assistant
-            </div>
-
-            <div class="message-content">
-                Connect to your LM Studio server and start chatting.
-            </div>
-
-        </div>
-
-    </section>
-
-</main>
-
-<div class="composer">
-
-    <div
-        id="typing"
-        class="typing"
-        style="display: none;"
-    >
-        Generating response...
+<div id="settings">
+  <div class="settings-inner">
+    <div class="field-row">
+      <div class="field" style="flex:2">
+        <label for="hostInput">Server address (IP of the LM Studio machine)</label>
+        <input id="hostInput" type="text" placeholder="192.168.1.42" inputmode="decimal">
+      </div>
+      <div class="field narrow">
+        <label for="portInput">Port</label>
+        <input id="portInput" type="text" placeholder="1234" inputmode="numeric">
+      </div>
     </div>
-
-    <div class="composer-row">
-
-        <textarea
-            id="prompt"
-            placeholder="Message the model..."
-            rows="1"
-        ></textarea>
-
-        <button
-            id="sendButton"
-            class="send-button"
-            onclick="sendMessage()"
-        >
-            ↑
-        </button>
-
+    <div class="field">
+      <label for="sysInput">System prompt (optional)</label>
+      <input id="sysInput" type="text" placeholder="You are a helpful assistant.">
     </div>
-
+    <div class="settings-actions">
+      <button class="btn" id="testBtn">Test connection</button>
+      <button class="btn primary" id="saveBtn">Save</button>
+    </div>
+    <div class="settings-hint">
+      In LM Studio, open the Developer / Local Server tab, load a model, and start the server with "Serve on Local Network" enabled. Enter that machine's LAN IP and port above — both devices need to be on the same Wi-Fi/network.
+    </div>
+  </div>
 </div>
 
-</div><script>
+<div id="chat">
+  <div class="empty-state" id="emptyState">
+    <span class="em-icon">▍▍▍</span>
+    Point this at your LM Studio server's IP in ⚙ settings, then say hello.
+  </div>
+</div>
 
-    let conversation = [];
+<div id="inputbar">
+  <div class="input-row">
+    <textarea id="prompt" rows="1" placeholder="Message the model…"></textarea>
+    <button id="send" aria-label="Send">↑</button>
+  </div>
+</div>
 
-    const serverUrlInput =
-        document.getElementById("serverUrl");
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const chatEl = $('chat'), emptyState = $('emptyState');
+  const promptEl = $('prompt'), sendBtn = $('send');
+  const settingsEl = $('settings'), gearBtn = $('gearBtn');
+  const hostInput = $('hostInput'), portInput = $('portInput'), sysInput = $('sysInput');
+  const testBtn = $('testBtn'), saveBtn = $('saveBtn');
+  const statusDot = $('statusDot'), modelLabel = $('modelLabel');
 
-    const modelSelect =
-        document.getElementById("model");
+  const store = {
+    get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; } catch(e){ return d; } },
+    set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+  };
 
-    const messages =
-        document.getElementById("messages");
+  let cfg = store.get('lms_cfg', { host:'', port:'1234', sys:'' });
+  hostInput.value = cfg.host; portInput.value = cfg.port; sysInput.value = cfg.sys;
 
-    const promptInput =
-        document.getElementById("prompt");
+  let history = store.get('lms_history', []); // [{role, content}]
+  let currentModel = store.get('lms_model', '');
+  let controller = null;
+  let generating = false;
 
-    const sendButton =
-        document.getElementById("sendButton");
+  function baseUrl(){
+    const h = (hostInput.value || cfg.host || '').trim();
+    const p = (portInput.value || cfg.port || '1234').trim();
+    if(!h) return null;
+    return `http://${h}:${p}`;
+  }
 
-    const typing =
-        document.getElementById("typing");
+  function setStatus(state){ // 'offline' | 'online' | 'busy'
+    statusDot.className = 'logo' + (state === 'offline' ? '' : ' ' + state);
+  }
 
-    const statusDot =
-        document.getElementById("statusDot");
+  function renderEmpty(){
+    emptyState.style.display = history.length ? 'none' : 'block';
+  }
 
-    const statusText =
-        document.getElementById("statusText");
+  function scrollToBottom(){
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
 
-    const connectionError =
-        document.getElementById("connectionError");
+  function addMessage(role, content){
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = content;
+    msg.appendChild(bubble);
+    chatEl.appendChild(msg);
+    renderEmpty();
+    scrollToBottom();
+    return { msg, bubble };
+  }
 
+  function addStats(msgEl, text){
+    const s = document.createElement('div');
+    s.className = 'stats';
+    s.innerHTML = text;
+    msgEl.appendChild(s);
+    scrollToBottom();
+  }
 
-    function getBaseUrl() {
+  function fmt(n, d=1){ return (Math.round(n * Math.pow(10,d)) / Math.pow(10,d)).toFixed(d); }
 
-        return serverUrlInput.value
-            .trim()
-            .replace(/\/+$/, "");
-
+  async function testConnection(silent){
+    const url = baseUrl();
+    if(!url){ if(!silent) alert('Enter a server address first.'); setStatus('offline'); return false; }
+    setStatus('busy');
+    try{
+      const res = await fetch(url + '/v1/models', { method:'GET' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const model = data?.data?.[0]?.id || 'unknown model';
+      currentModel = model;
+      store.set('lms_model', model);
+      modelLabel.textContent = model;
+      setStatus('online');
+      return true;
+    }catch(err){
+      setStatus('offline');
+      modelLabel.textContent = 'not connected';
+      if(!silent) alert('Could not reach the server:\n' + err.message + '\n\nCheck the IP/port and that both devices share a network.');
+      return false;
     }
+  }
 
+  gearBtn.addEventListener('click', () => settingsEl.classList.toggle('open'));
 
-    function setStatus(text, state = "") {
+  saveBtn.addEventListener('click', async () => {
+    cfg = { host: hostInput.value.trim(), port: (portInput.value.trim() || '1234'), sys: sysInput.value.trim() };
+    store.set('lms_cfg', cfg);
+    await testConnection(true);
+    settingsEl.classList.remove('open');
+  });
 
-        statusText.textContent = text;
+  testBtn.addEventListener('click', () => testConnection(false));
 
-        statusDot.className =
-            "status-dot " + state;
+  promptEl.addEventListener('input', () => {
+    promptEl.style.height = 'auto';
+    promptEl.style.height = Math.min(promptEl.scrollHeight, 120) + 'px';
+  });
 
+  promptEl.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      handleSend();
     }
+  });
 
+  sendBtn.addEventListener('click', () => {
+    if(generating){ stopGeneration(); } else { handleSend(); }
+  });
 
-    async function testConnection() {
+  function stopGeneration(){
+    if(controller) controller.abort();
+  }
 
-        connectionError.textContent = "";
+  function setGenerating(state){
+    generating = state;
+    sendBtn.textContent = state ? '■' : '↑';
+    sendBtn.classList.toggle('stop', state);
+    setStatus(state ? 'busy' : (currentModel ? 'online' : 'offline'));
+  }
 
-        setStatus("Connecting...");
+  async function handleSend(){
+    const text = promptEl.value.trim();
+    if(!text || generating) return;
+    const url = baseUrl();
+    if(!url){ settingsEl.classList.add('open'); return; }
 
-        try {
+    history.push({ role:'user', content:text });
+    store.set('lms_history', history);
+    addMessage('user', text);
+    promptEl.value = '';
+    promptEl.style.height = 'auto';
 
-            const response = await fetch(
-                `${getBaseUrl()}/v1/models`
-            );
+    const messages = [];
+    if(cfg.sys) messages.push({ role:'system', content: cfg.sys });
+    messages.push(...history);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+    const { msg: aMsg, bubble: aBubble } = addMessage('assistant', '');
+    aBubble.innerHTML = '<span class="cursor"></span>';
+
+    setGenerating(true);
+    controller = new AbortController();
+    const t0 = performance.now();
+    let firstTokenAt = null;
+    let fullText = '';
+    let tokenCount = 0;
+
+    try{
+      const res = await fetch(url + '/v1/chat/completions', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: currentModel || 'local-model',
+          messages,
+          stream: true,
+          temperature: 0.7
+        })
+      });
+
+      if(!res.ok || !res.body){
+        throw new Error('HTTP ' + res.status);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+
+      while(true){
+        const { done, value } = await reader.read();
+        if(done) break;
+        buf += decoder.decode(value, { stream:true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for(const line of lines){
+          const t = line.trim();
+          if(!t.startsWith('data:')) continue;
+          const payload = t.slice(5).trim();
+          if(payload === '[DONE]') continue;
+          try{
+            const json = JSON.parse(payload);
+            const delta = json.choices?.[0]?.delta?.content;
+            if(delta){
+              if(firstTokenAt === null) firstTokenAt = performance.now();
+              fullText += delta;
+              tokenCount++;
+              aBubble.innerHTML = '';
+              aBubble.appendChild(document.createTextNode(fullText));
+              const cur = document.createElement('span');
+              cur.className = 'cursor';
+              aBubble.appendChild(cur);
+              scrollToBottom();
             }
-
-            const data =
-                await response.json();
-
-            populateModels(data.data || []);
-
-            setStatus("Connected", "connected");
-
-        } catch (error) {
-
-            setStatus(
-                "Connection failed",
-                "error"
-            );
-
-            connectionError.textContent =
-                "Could not connect to LM Studio. Check the IP address, port, network and firewall.";
-
+            if(json.model) currentModel = json.model;
+          }catch(e){ /* skip malformed chunk */ }
         }
+      }
 
-    }
+      const t1 = performance.now();
+      aBubble.textContent = fullText || '(empty response)';
+      const totalS = (t1 - t0) / 1000;
+      const genS = firstTokenAt ? (t1 - firstTokenAt) / 1000 : totalS;
+      const ttft = firstTokenAt ? (firstTokenAt - t0) / 1000 : totalS;
+      const tps = genS > 0 ? tokenCount / genS : 0;
+      addStats(aMsg, `<span>model: <b>${currentModel || '—'}</b></span><span>ttft: <b>${fmt(ttft,2)}s</b></span><span>tok/s: <b>${fmt(tps,1)}</b></span><span>chunks: <b>${tokenCount}</b></span><span>total: <b>${fmt(totalS,2)}s</b></span>`);
 
+      history.push({ role:'assistant', content: fullText });
+      store.set('lms_history', history);
+      modelLabel.textContent = currentModel || 'connected';
+      setStatus('online');
 
-    async function loadModels() {
-
-        await testConnection();
-
-    }
-
-
-    function populateModels(models) {
-
-        modelSelect.innerHTML = "";
-
-        if (models.length === 0) {
-
-            modelSelect.innerHTML =
-                `<option value="">
-                    No models found
-                </option>`;
-
-            return;
-
+    }catch(err){
+      if(err.name === 'AbortError'){
+        aBubble.textContent = fullText || '(stopped)';
+        if(fullText){
+          history.push({ role:'assistant', content: fullText });
+          store.set('lms_history', history);
         }
-
-        models.forEach(model => {
-
-            const option =
-                document.createElement("option");
-
-            option.value =
-                model.id;
-
-            option.textContent =
-                model.id;
-
-            modelSelect.appendChild(option);
-
-        });
-
+      } else {
+        aBubble.classList.add('error');
+        aBubble.textContent = 'Error reaching server: ' + err.message;
+        setStatus('offline');
+      }
+    } finally {
+      setGenerating(false);
+      controller = null;
     }
-
-
-    function addUserMessage(content) {
-
-        const message =
-            document.createElement("div");
-
-        message.className =
-            "message user";
-
-        message.innerHTML = `
-            <div class="message-label">
-                You
-            </div>
-
-            <div class="message-content"></div>
-        `;
-
-        message.querySelector(
-            ".message-content"
-        ).textContent = content;
-
-        messages.appendChild(message);
-
-        scrollToBottom();
-
-    }
-
-
-    function createAssistantMessage() {
-
-        const message =
-            document.createElement("div");
-
-        message.className =
-            "message assistant";
-
-        message.innerHTML = `
-            <div class="message-label">
-                Assistant
-            </div>
-
-            <div class="message-content"></div>
-        `;
-
-        messages.appendChild(message);
-
-        return message;
-
-    }
-
-
-    function scrollToBottom() {
-
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: "smooth"
-        });
-
-    }
-
-
-    async function sendMessage() {
-
-        const prompt =
-            promptInput.value.trim();
-
-        if (!prompt) {
-            return;
-        }
-
-        const model =
-            modelSelect.value;
-
-        if (!model) {
-
-            alert(
-                "Please load and select a model first."
-            );
-
-            return;
-
-        }
-
-        addUserMessage(prompt);
-
-        conversation.push({
-
-            role: "user",
-
-            content: prompt
-
-        });
-
-        promptInput.value = "";
-
-        sendButton.disabled = true;
-
-        typing.style.display =
-            "block";
-
-        const assistantMessage =
-            createAssistantMessage();
-
-        const contentElement =
-            assistantMessage.querySelector(
-                ".message-content"
-            );
-
-        const startTime =
-            performance.now();
-
-        let fullResponse = "";
-
-        let completionTokens = 0;
-
-        try {
-
-            const response =
-                await fetch(
-                    `${getBaseUrl()}/v1/chat/completions`,
-                    {
-
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            model: model,
-
-                            messages: conversation,
-
-                            temperature: Number(
-                                document.getElementById(
-                                    "temperature"
-                                ).value
-                            ),
-
-                            max_tokens: Number(
-                                document.getElementById(
-                                    "maxTokens"
-                                ).value
-                            ),
-
-                            stream: true
-
-                        })
-
-                    }
-                );
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `HTTP ${response.status}`
-                );
-
-            }
-
-            if (!response.body) {
-
-                throw new Error(
-                    "Streaming is not supported by this browser."
-                );
-
-            }
-
-            const reader =
-                response.body.getReader();
-
-            const decoder =
-                new TextDecoder();
-
-            let buffer = "";
-
-            while (true) {
-
-                const {
-                    value,
-                    done
-                } = await reader.read();
-
-                if (done) {
-                    break;
-                }
-
-                buffer +=
-                    decoder.decode(
-                        value,
-                        {
-                            stream: true
-                        }
-                    );
-
-                const lines =
-                    buffer.split("\n");
-
-                buffer =
-                    lines.pop();
-
-                for (const line of lines) {
-
-                    const trimmed =
-                        line.trim();
-
-                    if (!trimmed) {
-                        continue;
-                    }
-
-                    if (
-                        !trimmed.startsWith(
-                            "data:"
-                        )
-                    ) {
-                        continue;
-                    }
-
-                    const data =
-                        trimmed.slice(5).trim();
-
-                    if (data === "[DONE]") {
-                        continue;
-                    }
-
-                    try {
-
-                        const json =
-                            JSON.parse(data);
-
-                        const delta =
-                            json.choices?.[0]
-                                ?.delta
-                                ?.content;
-
-                        if (delta) {
-
-                            fullResponse +=
-                                delta;
-
-                            contentElement.textContent =
-                                fullResponse;
-
-                            contentElement.innerHTML =
-                                escapeHtml(
-                                    fullResponse
-                                ) +
-                                '<span class="cursor"></span>';
-
-                            scrollToBottom();
-
-                        }
-
-                        if (
-                            json.usage
-                            ?.completion_tokens
-                        ) {
-
-                            completionTokens =
-                                json.usage
-                                .completion_tokens;
-
-                        }
-
-                    } catch (error) {
-
-                        console.warn(
-                            "Could not parse stream chunk:",
-                            data
-                        );
-
-                    }
-
-                }
-
-            }
-
-            contentElement.textContent =
-                fullResponse ||
-                "The model returned no text.";
-
-            const endTime =
-                performance.now();
-
-            const responseTime =
-                endTime - startTime;
-
-            const tokensPerSecond =
-                completionTokens > 0
-                    ? completionTokens /
-                      (responseTime / 1000)
-                    : null;
-
-            conversation.push({
-
-                role: "assistant",
-
-                content: fullResponse
-
-            });
-
-            addResponseInfo(
-                assistantMessage,
-                {
-
-                    responseTime,
-
-                    completionTokens,
-
-                    tokensPerSecond
-
-                }
-            );
-
-            setStatus(
-                "Connected",
-                "connected"
-            );
-
-        } catch (error) {
-
-            contentElement.textContent =
-                "Error communicating with LM Studio:\n\n" +
-                error.message;
-
-            setStatus(
-                "Request failed",
-                "error"
-            );
-
-        } finally {
-
-            sendButton.disabled =
-                false;
-
-            typing.style.display =
-                "none";
-
-            promptInput.focus();
-
-        }
-
-    }
-
-
-    function addResponseInfo(
-        message,
-        info
-    ) {
-
-        const details =
-            document.createElement(
-                "details"
-            );
-
-        details.className =
-            "response-info";
-
-        const summary =
-            document.createElement(
-                "summary"
-            );
-
-        summary.textContent =
-            "Response information";
-
-        const stats =
-            document.createElement(
-                "div"
-            );
-
-        stats.className =
-            "stats";
-
-        const responseTime =
-            `${(
-                info.responseTime / 1000
-            ).toFixed(2)} s`;
-
-        const tokensPerSecond =
-            info.tokensPerSecond
-                ? `${info.tokensPerSecond.toFixed(1)} tok/s`
-                : "Unavailable";
-
-        stats.innerHTML = `
-
-            <div class="stat">
-
-                <div class="stat-title">
-                    Response time
-                </div>
-
-                <div class="stat-value">
-                    ${responseTime}
-                </div>
-
-            </div>
-
-            <div class="stat">
-
-                <div class="stat-title">
-                    Completion tokens
-                </div>
-
-                <div class="stat-value">
-                    ${info.completionTokens || "—"}
-                </div>
-
-            </div>
-
-            <div class="stat">
-
-                <div class="stat-title">
-                    Tokens/sec
-                </div>
-
-                <div class="stat-value">
-                    ${tokensPerSecond}
-                </div>
-
-            </div>
-
-        `;
-
-        details.appendChild(summary);
-
-        details.appendChild(stats);
-
-        message.appendChild(details);
-
-    }
-
-
-    function escapeHtml(text) {
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-        div.textContent =
-            text;
-
-        return div.innerHTML;
-
-    }
-
-
-    promptInput.addEventListener(
-        "keydown",
-        function(event) {
-
-            if (
-                event.key === "Enter" &&
-                !event.shiftKey
-            ) {
-
-                event.preventDefault();
-
-                sendMessage();
-
-            }
-
-        }
-    );
-
-
-    promptInput.addEventListener(
-        "input",
-        function() {
-
-            this.style.height =
-                "auto";
-
-            this.style.height =
-                Math.min(
-                    this.scrollHeight,
-                    140
-                ) + "px";
-
-        }
-    );
-
-</script></body>
+  }
+
+  // restore history
+  history.forEach(m => addMessage(m.role, m.content));
+  if(currentModel) modelLabel.textContent = currentModel;
+  renderEmpty();
+
+  // initial silent check if we have a saved host
+  if(cfg.host) testConnection(true);
+  else settingsEl.classList.add('open');
+})();
+</script>
+</body>
 </html>
