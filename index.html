@@ -1,2099 +1,615 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"><title>LM Studio · Local Console</title><style>
-
-:root{
-
-  /* DEFAULT THEME: DARK CONSOLE */
-
-  --bg: #0d1210;
-  --panel: #121915;
-  --panel-2: #161f1a;
-  --line: #23302a;
-  --text: #e7efe9;
-  --text-dim: #8ba396;
-  --accent: #5ee6a3;
-  --accent-dim: #2f8d63;
-  --user: #1c2723;
-  --danger: #e6685e;
-
-  --mono:
-    'SF Mono',
-    'JetBrains Mono',
-    ui-monospace,
-    Menlo,
-    Consolas,
-    monospace;
-
-  --sans:
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-
-}
-
-
-/* LIGHT CLEAN THEME */
-
-body.light-theme{
-
-  --bg: #f4f5f7;
-  --panel: #ffffff;
-  --panel-2: #ffffff;
-  --line: #e1e3e6;
-  --text: #17181a;
-  --text-dim: #73777d;
-  --accent: #111111;
-  --accent-dim: #111111;
-  --user: #111111;
-  --danger: #c62828;
-
-}
-
-
-/* BASE */
-
-*{
-
-  box-sizing:border-box;
-
-  -webkit-tap-highlight-color:transparent;
-
-}
-
-html,
-body{
-
-  height:100%;
-
-}
-
-body{
-
-  margin:0;
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(94,230,163,0.05),
-      transparent 60%
-    ),
-    var(--bg);
-
-  color:var(--text);
-
-  font-family:var(--sans);
-
-  display:flex;
-
-  flex-direction:column;
-
-  height:100dvh;
-
-  overflow:hidden;
-
-  transition:
-    background .2s ease,
-    color .2s ease;
-
-}
-
-
-/* LIGHT THEME BACKGROUND */
-
-body.light-theme{
-
-  background:var(--bg);
-
-}
-
-
-/* HEADER */
-
-header{
-
-  flex:0 0 auto;
-
-  padding:
-    max(12px, env(safe-area-inset-top))
-    14px
-    10px;
-
-  border-bottom:1px solid var(--line);
-
-  background:var(--panel);
-
-  transition:
-    background .2s ease,
-    border-color .2s ease;
-
-}
-
-.head-row{
-
-  display:flex;
-
-  align-items:center;
-
-  gap:10px;
-
-}
-
-.logo{
-
-  width:9px;
-
-  height:9px;
-
-  border-radius:50%;
-
-  background:var(--danger);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(230,104,94,0.15);
-
-  flex:0 0 auto;
-
-  transition:
-    background .2s,
-    box-shadow .2s;
-
-}
-
-.logo.online{
-
-  background:var(--accent);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(94,230,163,0.15);
-
-}
-
-.logo.busy{
-
-  background:#e6c25e;
-
-  box-shadow:
-    0 0 0 3px
-    rgba(230,194,94,0.15);
-
-  animation:pulse 1s infinite;
-
-}
-
-@keyframes pulse{
-
-  50%{
-    opacity:.4;
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Tilt Charades</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#161022;
+    --bg-deep-2:#1f1830;
+    --surface:#251c38;
+    --surface-2:#2e2242;
+    --gold:#f3b33d;
+    --coral:#ff5d5d;
+    --mint:#35d0a0;
+    --text:#f5f0e6;
+    --text-dim:#b6a8c9;
+    --line:rgba(245,240,230,0.1);
   }
-
-}
-
-h1{
-
-  font-size:14px;
-
-  font-weight:600;
-
-  letter-spacing:.02em;
-
-  margin:0;
-
-  font-family:var(--mono);
-
-  text-transform:uppercase;
-
-}
-
-.head-sub{
-
-  font-size:11px;
-
-  color:var(--text-dim);
-
-  font-family:var(--mono);
-
-  margin-left:auto;
-
-  text-align:right;
-
-  max-width:42vw;
-
-  overflow:hidden;
-
-  text-overflow:ellipsis;
-
-  white-space:nowrap;
-
-}
-
-.gear{
-
-  background:none;
-
-  border:none;
-
-  color:var(--text-dim);
-
-  font-size:18px;
-
-  padding:4px 2px;
-
-  line-height:1;
-
-  cursor:pointer;
-
-}
-
-
-/* SETTINGS */
-
-#settings{
-
-  flex:0 0 auto;
-
-  max-height:0;
-
-  overflow:hidden;
-
-  background:var(--panel-2);
-
-  border-bottom:1px solid var(--line);
-
-  transition:
-
-    max-height .25s ease;
-
-}
-
-#settings.open{
-
-  max-height:500px;
-
-}
-
-.settings-inner{
-
-  padding:14px;
-
-  display:flex;
-
-  flex-direction:column;
-
-  gap:10px;
-
-}
-
-.field label{
-
-  display:block;
-
-  font-size:11px;
-
-  color:var(--text-dim);
-
-  font-family:var(--mono);
-
-  text-transform:uppercase;
-
-  letter-spacing:.05em;
-
-  margin-bottom:5px;
-
-}
-
-.field input,
-.field select{
-
-  width:100%;
-
-  padding:10px 11px;
-
-  border-radius:8px;
-
-  border:1px solid var(--line);
-
-  background:var(--bg);
-
-  color:var(--text);
-
-  font-family:var(--mono);
-
-  font-size:13px;
-
-  outline:none;
-
-}
-
-.field input:focus,
-.field select:focus{
-
-  border-color:var(--accent-dim);
-
-}
-
-.field-row{
-
-  display:flex;
-
-  gap:8px;
-
-}
-
-.field-row .field{
-
-  flex:1;
-
-}
-
-.field-row .field.narrow{
-
-  flex:0 0 90px;
-
-}
-
-.settings-actions{
-
-  display:flex;
-
-  gap:8px;
-
-  margin-top:2px;
-
-}
-
-.btn{
-
-  flex:1;
-
-  padding:10px;
-
-  border-radius:8px;
-
-  border:1px solid var(--line);
-
-  background:var(--panel);
-
-  color:var(--text);
-
-  font-family:var(--mono);
-
-  font-size:12px;
-
-  text-transform:uppercase;
-
-  letter-spacing:.04em;
-
-  cursor:pointer;
-
-}
-
-.btn.primary{
-
-  background:var(--accent-dim);
-
-  border-color:var(--accent-dim);
-
-  color:#04150d;
-
-  font-weight:600;
-
-}
-
-.settings-hint{
-
-  font-size:11px;
-
-  color:var(--text-dim);
-
-  line-height:1.5;
-
-}
-
-
-/* CHAT */
-
-#chat{
-
-  flex:1 1 auto;
-
-  overflow-y:auto;
-
-  padding:16px 12px 8px;
-
-  display:flex;
-
-  flex-direction:column;
-
-  gap:14px;
-
-  -webkit-overflow-scrolling:touch;
-
-}
-
-.empty-state{
-
-  margin:auto;
-
-  text-align:center;
-
-  color:var(--text-dim);
-
-  padding:0 30px;
-
-  font-size:13px;
-
-  line-height:1.6;
-
-}
-
-.empty-state .em-icon{
-
-  font-family:var(--mono);
-
-  color:var(--accent);
-
-  font-size:22px;
-
-  display:block;
-
-  margin-bottom:10px;
-
-}
-
-.msg{
-
-  max-width:88%;
-
-  display:flex;
-
-  flex-direction:column;
-
-  gap:4px;
-
-}
-
-.msg.user{
-
-  align-self:flex-end;
-
-  align-items:flex-end;
-
-}
-
-.msg.assistant{
-
-  align-self:flex-start;
-
-  align-items:flex-start;
-
-}
-
-.bubble{
-
-  padding:10px 13px;
-
-  border-radius:14px;
-
-  font-size:14.5px;
-
-  line-height:1.5;
-
-  white-space:pre-wrap;
-
-  word-wrap:break-word;
-
-}
-
-.msg.user .bubble{
-
-  background:var(--user);
-
-  border:1px solid var(--line);
-
-  border-bottom-right-radius:4px;
-
-  color:#ffffff;
-
-}
-
-.msg.assistant .bubble{
-
-  background:var(--panel);
-
-  border:1px solid var(--line);
-
-  border-bottom-left-radius:4px;
-
-}
-
-.msg.assistant .bubble.error{
-
-  border-color:var(--danger);
-
-  color:#ffb3ac;
-
-}
-
-.cursor{
-
-  display:inline-block;
-
-  width:7px;
-
-  height:14px;
-
-  background:var(--accent);
-
-  margin-left:2px;
-
-  vertical-align:text-bottom;
-
-  animation:blink .9s step-start infinite;
-
-}
-
-@keyframes blink{
-
-  50%{
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%; overflow:hidden;
+    background:var(--bg-deep);
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    -webkit-user-select:none; user-select:none;
+  }
+  #app{position:fixed; inset:0; overflow:hidden;}
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
     opacity:0;
+    transition:opacity .35s ease;
+  }
+  .screen.active{display:flex; opacity:1;}
+
+  /* ambient background texture */
+  #app::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(243,179,61,0.10), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(53,208,160,0.10), transparent 40%),
+      var(--bg-deep);
+    z-index:0;
+  }
+  .screen{position:relative; z-index:1;}
+
+  /* ---------- MENU ---------- */
+  .eyebrow{
+    font-size:13px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--gold); font-weight:600; margin-bottom:6px;
+  }
+  h1.title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(34px,9vw,54px);
+    margin:0 0 4px 0;
+    letter-spacing:.01em;
+  }
+  .subtitle{color:var(--text-dim); font-size:15px; margin-bottom:28px; text-align:center; max-width:420px; line-height:1.5;}
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    width:100%;
+    max-width:480px;
+  }
+  .cat-card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 14px;
+    text-align:left;
+    cursor:pointer;
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .cat-card .icon{font-size:26px; display:block; margin-bottom:8px;}
+  .cat-card .name{font-weight:700; font-size:16px;}
+  .cat-card .count{display:block; color:var(--text-dim); font-size:12px; margin-top:2px;}
+  .cat-card.selected{
+    border-color:var(--gold);
+    background:linear-gradient(135deg, rgba(243,179,61,0.16), var(--surface));
+    transform:translateY(-2px);
+  }
+  .cat-card:active{transform:scale(0.97);}
+
+  .time-row{
+    display:flex; gap:8px; margin-top:22px;
+  }
+  .time-pill{
+    padding:8px 16px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--text-dim);
+    font-weight:600; font-size:13px;
+    cursor:pointer;
+  }
+  .time-pill.selected{background:var(--gold); border-color:var(--gold); color:#1a1420;}
+
+  .btn{
+    margin-top:26px;
+    padding:14px 38px;
+    border-radius:999px;
+    border:none;
+    background:var(--gold);
+    color:#1a1420;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:.02em;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(243,179,61,0.25);
+  }
+  .btn:disabled{opacity:.35; box-shadow:none;}
+  .btn.ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    box-shadow:none;
+  }
+  .btn-row{display:flex; gap:12px;}
+
+  /* ---------- ROTATE / CALIBRATE ---------- */
+  .phone-icon{
+    width:70px; height:110px;
+    border:4px solid var(--gold);
+    border-radius:14px;
+    position:relative;
+    margin-bottom:22px;
+    animation:rotatePhone 1.8s ease-in-out infinite;
+  }
+  .phone-icon::after{
+    content:""; position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+    width:18px; height:3px; background:var(--gold); border-radius:2px;
+  }
+  @keyframes rotatePhone{
+    0%{transform:rotate(0deg);}
+    50%{transform:rotate(-90deg);}
+    100%{transform:rotate(-90deg);}
+  }
+  .calib-text{text-align:center; max-width:340px; color:var(--text-dim); line-height:1.6; margin-bottom:8px;}
+  .calib-text b{color:var(--text);}
+
+  /* ---------- COUNTDOWN ---------- */
+  #countdown-num{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:120px;
+    color:var(--gold);
   }
 
-}
-
-.stats{
-
-  font-family:var(--mono);
-
-  font-size:10.5px;
-
-  color:var(--text-dim);
-
-  display:flex;
-
-  gap:9px;
-
-  flex-wrap:wrap;
-
-  padding:0 3px;
-
-}
-
-.stats span{
-
-  white-space:nowrap;
-
-}
-
-.stats b{
-
-  color:var(--accent);
-
-  font-weight:600;
-
-}
-
-
-/* INPUT */
-
-#inputbar{
-
-  flex:0 0 auto;
-
-  border-top:1px solid var(--line);
-
-  background:var(--panel);
-
-  padding:
-    10px
-    10px
-    max(10px, env(safe-area-inset-bottom));
-
-}
-
-.input-row{
-
-  display:flex;
-
-  align-items:flex-end;
-
-  gap:8px;
-
-}
-
-#prompt{
-
-  flex:1;
-
-  resize:none;
-
-  max-height:120px;
-
-  min-height:22px;
-
-  background:var(--bg);
-
-  border:1px solid var(--line);
-
-  border-radius:18px;
-
-  color:var(--text);
-
-  font-family:var(--sans);
-
-  font-size:15px;
-
-  padding:10px 15px;
-
-  outline:none;
-
-  line-height:1.4;
-
-}
-
-#prompt:focus{
-
-  border-color:var(--accent-dim);
-
-}
-
-#send{
-
-  flex:0 0 auto;
-
-  width:40px;
-
-  height:40px;
-
-  border-radius:50%;
-
-  border:none;
-
-  background:var(--accent);
-
-  color:#04150d;
-
-  font-size:17px;
-
-  cursor:pointer;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-}
-
-#send:disabled{
-
-  background:var(--line);
-
-  color:var(--text-dim);
-
-}
-
-#send.stop{
-
-  background:var(--danger);
-
-  color:#210503;
-
-}
-
-
-/* LIGHT THEME OVERRIDES */
-
-body.light-theme .msg.user .bubble{
-
-  color:#ffffff;
-
-}
-
-body.light-theme .cursor{
-
-  background:#111111;
-
-}
-
-body.light-theme .btn.primary{
-
-  color:#ffffff;
-
-}
-
-body.light-theme .logo.online{
-
-  box-shadow:
-    0 0 0 3px
-    rgba(38,122,59,.15);
-
-}
-
-body.light-theme .stats b{
-
-  color:#267a3b;
-
-}
-
-
-/* SCROLLBAR */
-
-::-webkit-scrollbar{
-
-  width:6px;
-
-}
-
-::-webkit-scrollbar-thumb{
-
-  background:var(--line);
-
-  border-radius:3px;
-
-}
-
-</style></head><body><header>  <div class="head-row"><div
-  class="logo"
-  id="statusDot"
-></div>
-
-<h1>
-  LM Studio Console
-</h1>
-
-<div
-  class="head-sub"
-  id="modelLabel"
->
-  not connected
-</div>
-
-<button
-  class="gear"
-  id="gearBtn"
-  aria-label="Settings"
->
-  ⚙
-</button>
-
-  </div></header><div id="settings">  <div class="settings-inner"><div class="field-row">
-
-  <div
-    class="field"
-    style="flex:2"
-  >
-
-    <label for="hostInput">
-      Server address
-    </label>
-
-    <input
-      id="hostInput"
-      type="text"
-      placeholder="192.168.1.42"
-      inputmode="decimal"
-    >
-
+  /* ---------- GAME ---------- */
+  #game-screen{padding:0;}
+  .hud{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 22px;
+    z-index:3;
+  }
+  .hud .score{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; color:var(--mint);
+  }
+  .hud .timer{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; color:var(--text);
+  }
+  .timer.urgent{color:var(--coral);}
+  #timer-bar-track{
+    position:absolute; top:0; left:0; right:0; height:5px; background:var(--surface); z-index:3;
+  }
+  #timer-bar{height:100%; background:var(--gold); width:100%; transition:width 1s linear;}
+
+  .word-wrap{
+    flex:1; width:100%; display:flex; align-items:center; justify-content:center;
+    padding:0 40px;
+  }
+  #word{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:clamp(38px,8.5vw,84px);
+    text-align:center;
+    line-height:1.05;
+  }
+  .cue-row{
+    position:absolute; bottom:14px; left:0; right:0;
+    display:flex; justify-content:space-between; padding:0 22px;
+    color:var(--text-dim); font-size:12px; letter-spacing:.05em; text-transform:uppercase;
+    z-index:3; font-weight:600;
+  }
+  .cue-row span{display:flex; align-items:center; gap:6px;}
+
+  .tap-zone{
+    position:absolute; top:0; bottom:0; width:50%; z-index:2;
+  }
+  .tap-zone.left{left:0;}
+  .tap-zone.right{right:0;}
+
+  #flash{
+    position:absolute; inset:0; z-index:1;
+    opacity:0; pointer-events:none;
+    transition:opacity .12s ease;
+  }
+  #flash.show-correct{opacity:1; background:radial-gradient(circle, rgba(53,208,160,.55), rgba(53,208,160,.05));}
+  #flash.show-pass{opacity:1; background:radial-gradient(circle, rgba(255,93,93,.5), rgba(255,93,93,.05));}
+
+  /* ---------- RESULTS ---------- */
+  .score-big{
+    font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size:96px; color:var(--gold); line-height:1;
+  }
+  .score-label{color:var(--text-dim); font-size:14px; letter-spacing:.15em; text-transform:uppercase; margin-top:6px;}
+  .results-list{
+    width:100%; max-width:420px;
+    max-height:26vh;
+    overflow-y:auto;
+    margin:20px 0;
+    display:flex; flex-wrap:wrap; gap:8px;
+    justify-content:center;
+  }
+  .chip{
+    background:var(--surface); border:1px solid var(--line);
+    padding:6px 12px; border-radius:999px; font-size:13px; color:var(--text-dim);
+  }
+
+  .landscape-lock-msg{
+    display:none;
+  }
+  @media (orientation:portrait){
+    body.needs-landscape .screen:not(#rotate-screen){display:none !important;}
+    body.needs-landscape #rotate-screen{display:flex !important;}
+  }
+
+  .foot-hint{
+    position:absolute; bottom:18px; color:var(--text-dim); font-size:12px; text-align:center;
+  }
+
+  ::-webkit-scrollbar{width:0; height:0;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- MENU -->
+  <div class="screen active" id="menu-screen">
+    <div class="eyebrow">Guess the word</div>
+    <h1 class="title">Tilt Charades</h1>
+    <p class="subtitle">Hold your phone to your forehead. Tilt <b>up</b> for correct, tilt <b>down</b> to pass. Pick a category to start.</p>
+
+    <div class="cat-grid" id="cat-grid"></div>
+
+    <div class="time-row" id="time-row"></div>
+
+    <button class="btn" id="start-btn" disabled>Start Game</button>
   </div>
 
-  <div class="field narrow">
+  <!-- ROTATE / CALIBRATE -->
+  <div class="screen" id="rotate-screen">
+    <div class="phone-icon"></div>
+    <div class="calib-text">Rotate your phone to <b>landscape</b> and hold it up to your forehead, screen facing away.</div>
+    <div class="calib-text" id="permission-note" style="display:none;">Tap below to enable motion sensing.</div>
+    <button class="btn" id="begin-btn">I'm Ready</button>
+    <button class="btn ghost" id="cancel-begin-btn" style="margin-top:12px;">Back</button>
+  </div>
 
-    <label for="portInput">
-      Port
-    </label>
+  <!-- COUNTDOWN -->
+  <div class="screen" id="countdown-screen">
+    <div id="countdown-num">3</div>
+  </div>
 
-    <input
-      id="portInput"
-      type="text"
-      placeholder="1234"
-      inputmode="numeric"
-    >
+  <!-- GAME -->
+  <div class="screen" id="game-screen">
+    <div id="timer-bar-track"><div id="timer-bar"></div></div>
+    <div class="hud">
+      <div class="score" id="score-display">0</div>
+      <div class="timer" id="timer-display">60</div>
+    </div>
+    <div id="flash"></div>
+    <div class="tap-zone left" id="tap-pass"></div>
+    <div class="tap-zone right" id="tap-correct"></div>
+    <div class="word-wrap"><div id="word">WORD</div></div>
+    <div class="cue-row">
+      <span>↓ tilt down · pass</span>
+      <span>tilt up · correct ↑</span>
+    </div>
+  </div>
 
+  <!-- RESULTS -->
+  <div class="screen" id="results-screen">
+    <div class="eyebrow" id="results-cat">MUSIC</div>
+    <div class="score-big" id="final-score">0</div>
+    <div class="score-label">words correct</div>
+    <div class="results-list" id="results-list"></div>
+    <div class="btn-row">
+      <button class="btn ghost" id="menu-btn">Menu</button>
+      <button class="btn" id="again-btn">Play Again</button>
+    </div>
   </div>
 
 </div>
 
-
-<div class="field">
-
-  <label for="sysInput">
-    System prompt
-  </label>
-
-  <input
-    id="sysInput"
-    type="text"
-    placeholder="You are a helpful assistant."
-  >
-
-</div>
-
-
-<div class="field">
-
-  <label for="themeInput">
-    Appearance
-  </label>
-
-  <select id="themeInput">
-
-    <option value="dark">
-      Dark Console
-    </option>
-
-    <option value="light">
-      Light Clean
-    </option>
-
-  </select>
-
-</div>
-
-
-<div class="settings-actions">
-
-  <button
-    class="btn"
-    id="testBtn"
-  >
-    Test connection
-  </button>
-
-  <button
-    class="btn primary"
-    id="saveBtn"
-  >
-    Save
-  </button>
-
-</div>
-
-
-<div class="settings-hint">
-
-  In LM Studio, open the Developer / Local Server tab, load a model, and start the server with "Serve on Local Network" enabled. Enter that machine's LAN IP and port above — both devices need to be on the same Wi-Fi/network.
-
-</div>
-
-  </div></div><div id="chat">  <div
-    class="empty-state"
-    id="emptyState"
-  ><span class="em-icon">
-  ▍▍▍
-</span>
-
-Point this at your LM Studio server's IP in ⚙ settings, then say hello.
-
-  </div></div><div id="inputbar">  <div class="input-row"><textarea
-  id="prompt"
-  rows="1"
-  placeholder="Message the model…"
-></textarea>
-
-<button
-  id="send"
-  aria-label="Send"
->
-  ↑
-</button>
-
-  </div></div><script>
-
+<script>
 (function(){
+  "use strict";
 
-  const $ =
-    id => document.getElementById(id);
-
-
-  const chatEl =
-    $('chat');
-
-  const emptyState =
-    $('emptyState');
-
-  const promptEl =
-    $('prompt');
-
-  const sendBtn =
-    $('send');
-
-  const settingsEl =
-    $('settings');
-
-  const gearBtn =
-    $('gearBtn');
-
-  const hostInput =
-    $('hostInput');
-
-  const portInput =
-    $('portInput');
-
-  const sysInput =
-    $('sysInput');
-
-  const themeInput =
-    $('themeInput');
-
-  const testBtn =
-    $('testBtn');
-
-  const saveBtn =
-    $('saveBtn');
-
-  const statusDot =
-    $('statusDot');
-
-  const modelLabel =
-    $('modelLabel');
-
-
-  const store = {
-
-    get(k, d){
-
-      try{
-
-        return JSON.parse(
-          localStorage.getItem(k)
-        ) ?? d;
-
-      }catch(e){
-
-        return d;
-
-      }
-
-    },
-
-    set(k, v){
-
-      localStorage.setItem(
-        k,
-        JSON.stringify(v)
-      );
-
-    }
-
+  /* ---------------- DATA ---------------- */
+  const CATEGORIES = {
+    music: { name:"Music", icon:"🎵", color:"#f3b33d", words:["Guitar","Piano","Drums","Saxophone","Violin","Trumpet","Rock And Roll","Jazz","Hip Hop","Opera","Karaoke","Concert","Headphones","Vinyl Record","DJ","Choir","Orchestra","Microphone","Bassline","Remix","Ballad","Lullaby","Marching Band","Air Guitar","Beatbox","Symphony"] },
+    animals: { name:"Animals", icon:"🦒", color:"#35d0a0", words:["Elephant","Giraffe","Penguin","Kangaroo","Octopus","Cheetah","Koala","Flamingo","Gorilla","Dolphin","Hedgehog","Peacock","Sloth","Rhinoceros","Owl","Platypus","Chameleon","Meerkat","Walrus","Otter","Toucan","Bat","Jellyfish","Raccoon","Hippopotamus","Squirrel"] },
+    food: { name:"Food", icon:"🍕", color:"#ff5d5d", words:["Pizza","Sushi","Taco","Spaghetti","Pancake","Burrito","Ice Cream","Hamburger","Popcorn","Donut","Waffle","Dumpling","Curry","Sandwich","Pretzel","Nachos","Lasagna","Croissant","Ramen","Guacamole","Meatball","Pumpkin Pie","Milkshake","Fried Chicken","Cupcake"] },
+    movies: { name:"Movies", icon:"🎬", color:"#9b7bd8", words:["Titanic","Jaws","Rocky","Frozen","Ghostbusters","Gladiator","Inception","Jurassic Park","The Notebook","Toy Story","Casablanca","Grease","Psycho","Avatar","The Godfather","Shrek","The Matrix","Alien","Up","Coco"] },
+    actors: { name:"Actors", icon:"🎭", color:"#f38fb0", words:["Tom Hanks","Meryl Streep","Denzel Washington","Scarlett Johansson","Leonardo DiCaprio","Emma Stone","Will Smith","Julia Roberts","Robert Downey Jr","Viola Davis","Brad Pitt","Sandra Bullock","Morgan Freeman","Jennifer Lawrence","Samuel L Jackson","Angelina Jolie","Dwayne Johnson","Natalie Portman","Keanu Reeves","Charlize Theron"] }
   };
 
-
-  let cfg =
-    store.get(
-      'lms_cfg',
-      {
-        host:'',
-        port:'1234',
-        sys:'',
-        theme:'dark'
-      }
-    );
-
-
-  hostInput.value =
-    cfg.host;
-
-  portInput.value =
-    cfg.port;
-
-  sysInput.value =
-    cfg.sys;
-
-  themeInput.value =
-    cfg.theme || 'dark';
-
-
-  let history =
-    store.get(
-      'lms_history',
-      []
-    );
-
-
-  let currentModel =
-    store.get(
-      'lms_model',
-      ''
-    );
-
-
-  let controller =
-    null;
-
-
-  let generating =
-    false;
-
-
-  function applyTheme(theme){
-
-    document.body.classList.toggle(
-      'light-theme',
-      theme === 'light'
-    );
-
-    themeInput.value =
-      theme;
-
-  }
-
-
-  applyTheme(
-    cfg.theme || 'dark'
-  );
-
-
-  function baseUrl(){
-
-    const h =
-      (
-        hostInput.value ||
-        cfg.host ||
-        ''
-      ).trim();
-
-
-    const p =
-      (
-        portInput.value ||
-        cfg.port ||
-        '1234'
-      ).trim();
-
-
-    if(!h){
-
-      return null;
-
-    }
-
-
-    return `http://${h}:${p}`;
-
-  }
-
-
-  function setStatus(state){
-
-    statusDot.className =
-      'logo' +
-      (
-        state === 'offline'
-          ? ''
-          : ' ' + state
-      );
-
-  }
-
-
-  function renderEmpty(){
-
-    emptyState.style.display =
-      history.length
-        ? 'none'
-        : 'block';
-
-  }
-
-
-  function scrollToBottom(){
-
-    chatEl.scrollTop =
-      chatEl.scrollHeight;
-
-  }
-
-
-  function addMessage(
-    role,
-    content
-  ){
-
-    const msg =
-      document.createElement(
-        'div'
-      );
-
-
-    msg.className =
-      'msg ' + role;
-
-
-    const bubble =
-      document.createElement(
-        'div'
-      );
-
-
-    bubble.className =
-      'bubble';
-
-
-    bubble.textContent =
-      content;
-
-
-    msg.appendChild(
-      bubble
-    );
-
-
-    chatEl.appendChild(
-      msg
-    );
-
-
-    renderEmpty();
-
-    scrollToBottom();
-
-
-    return {
-
-      msg,
-
-      bubble
-
-    };
-
-  }
-
-
-  function addStats(
-    msgEl,
-    text
-  ){
-
-    const s =
-      document.createElement(
-        'div'
-      );
-
-
-    s.className =
-      'stats';
-
-
-    s.innerHTML =
-      text;
-
-
-    msgEl.appendChild(
-      s
-    );
-
-
-    scrollToBottom();
-
-  }
-
-
-  function fmt(
-    n,
-    d=1
-  ){
-
-    return (
-
-      Math.round(
-        n *
-        Math.pow(
-          10,
-          d
-        )
-      ) /
-      Math.pow(
-        10,
-        d
-      )
-
-    ).toFixed(d);
-
-  }
-
-
-  async function testConnection(
-    silent
-  ){
-
-    const url =
-      baseUrl();
-
-
-    if(!url){
-
-      if(!silent){
-
-        alert(
-          'Enter a server address first.'
-        );
-
-      }
-
-
-      setStatus(
-        'offline'
-      );
-
-
-      return false;
-
-    }
-
-
-    setStatus(
-      'busy'
-    );
-
-
-    try{
-
-      const res =
-        await fetch(
-          url +
-          '/v1/models',
-          {
-            method:'GET'
-          }
-        );
-
-
-      if(!res.ok){
-
-        throw new Error(
-          'HTTP ' +
-          res.status
-        );
-
-      }
-
-
-      const data =
-        await res.json();
-
-
-      const model =
-        data?.data?.[0]?.id ||
-        'unknown model';
-
-
-      currentModel =
-        model;
-
-
-      store.set(
-        'lms_model',
-        model
-      );
-
-
-      modelLabel.textContent =
-        model;
-
-
-      setStatus(
-        'online'
-      );
-
-
-      return true;
-
-
-    }catch(err){
-
-      setStatus(
-        'offline'
-      );
-
-
-      modelLabel.textContent =
-        'not connected';
-
-
-      if(!silent){
-
-        alert(
-          'Could not reach the server:\n' +
-          err.message +
-          '\n\nCheck the IP/port and that both devices share a network.'
-        );
-
-      }
-
-
-      return false;
-
-    }
-
-  }
-
-
-  gearBtn.addEventListener(
-    'click',
-    () => {
-
-      settingsEl.classList.toggle(
-        'open'
-      );
-
-    }
-  );
-
-
-  themeInput.addEventListener(
-    'change',
-    () => {
-
-      applyTheme(
-        themeInput.value
-      );
-
-    }
-  );
-
-
-  saveBtn.addEventListener(
-    'click',
-    async () => {
-
-
-      cfg = {
-
-        host:
-          hostInput.value.trim(),
-
-        port:
-          portInput.value.trim() ||
-          '1234',
-
-        sys:
-          sysInput.value.trim(),
-
-        theme:
-          themeInput.value
-
-      };
-
-
-      store.set(
-        'lms_cfg',
-        cfg
-      );
-
-
-      applyTheme(
-        cfg.theme
-      );
-
-
-      await testConnection(
-        true
-      );
-
-
-      settingsEl.classList.remove(
-        'open'
-      );
-
-    }
-  );
-
-
-  testBtn.addEventListener(
-    'click',
-    () => {
-
-      testConnection(
-        false
-      );
-
-    }
-  );
-
-
-  promptEl.addEventListener(
-    'input',
-    () => {
-
-      promptEl.style.height =
-        'auto';
-
-
-      promptEl.style.height =
-        Math.min(
-          promptEl.scrollHeight,
-          120
-        ) +
-        'px';
-
-    }
-  );
-
-
-  promptEl.addEventListener(
-    'keydown',
-    e => {
-
-      if(
-
-        e.key ===
-        'Enter' &&
-
-        !e.shiftKey
-
-      ){
-
-        e.preventDefault();
-
-        handleSend();
-
-      }
-
-    }
-  );
-
-
-  sendBtn.addEventListener(
-    'click',
-    () => {
-
-      if(generating){
-
-        stopGeneration();
-
-      }else{
-
-        handleSend();
-
-      }
-
-    }
-  );
-
-
-  function stopGeneration(){
-
-    if(controller){
-
-      controller.abort();
-
-    }
-
-  }
-
-
-  function setGenerating(
-    state
-  ){
-
-    generating =
-      state;
-
-
-    sendBtn.textContent =
-      state
-        ? '■'
-        : '↑';
-
-
-    sendBtn.classList.toggle(
-      'stop',
-      state
-    );
-
-
-    setStatus(
-
-      state
-        ? 'busy'
-        : (
-          currentModel
-            ? 'online'
-            : 'offline'
-        )
-
-    );
-
-  }
-
-
-  async function handleSend(){
-
-    const text =
-      promptEl.value.trim();
-
-
-    if(
-
-      !text ||
-      generating
-
-    ){
-
-      return;
-
-    }
-
-
-    const url =
-      baseUrl();
-
-
-    if(!url){
-
-      settingsEl.classList.add(
-        'open'
-      );
-
-
-      return;
-
-    }
-
-
-    history.push({
-
-      role:
-        'user',
-
-      content:
-        text
-
+  const TIME_OPTIONS = [30,60,90];
+
+  /* ---------------- STATE ---------------- */
+  let state = {
+    category:null,
+    timeLimit:60,
+    words:[],
+    index:0,
+    score:0,
+    correctWords:[],
+    timeLeft:0,
+    timerInterval:null,
+    cooldown:false,
+    baseline:null,
+    listenerAttached:false,
+    ended:false
+  };
+
+  const $ = id => document.getElementById(id);
+
+  /* ---------------- BUILD MENU ---------------- */
+  const catGrid = $("cat-grid");
+  Object.keys(CATEGORIES).forEach(key=>{
+    const c = CATEGORIES[key];
+    const card = document.createElement("button");
+    card.className = "cat-card";
+    card.type = "button";
+    card.innerHTML = `<span class="icon">${c.icon}</span><span class="name">${c.name}</span><span class="count">${c.words.length} words</span>`;
+    card.addEventListener("click", ()=>{
+      document.querySelectorAll(".cat-card").forEach(el=>el.classList.remove("selected"));
+      card.classList.add("selected");
+      state.category = key;
+      $("start-btn").disabled = false;
     });
+    catGrid.appendChild(card);
+  });
 
+  const timeRow = $("time-row");
+  TIME_OPTIONS.forEach(t=>{
+    const pill = document.createElement("button");
+    pill.className = "time-pill" + (t===60?" selected":"");
+    pill.type="button";
+    pill.textContent = t+"s";
+    pill.addEventListener("click", ()=>{
+      document.querySelectorAll(".time-pill").forEach(el=>el.classList.remove("selected"));
+      pill.classList.add("selected");
+      state.timeLimit = t;
+    });
+    timeRow.appendChild(pill);
+  });
+  state.timeLimit = 60;
 
-    store.set(
-      'lms_history',
-      history
-    );
+  /* ---------------- SCREEN NAV ---------------- */
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    $(id).classList.add("active");
+  }
 
-
-    addMessage(
-      'user',
-      text
-    );
-
-
-    promptEl.value =
-      '';
-
-
-    promptEl.style.height =
-      'auto';
-
-
-    const messages =
-      [];
-
-
-    if(cfg.sys){
-
-      messages.push({
-
-        role:
-          'system',
-
-        content:
-          cfg.sys
-
-      });
-
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
     }
+    return a;
+  }
 
+  /* ---------------- FLOW: menu -> rotate/permission ---------------- */
+  $("start-btn").addEventListener("click", ()=>{
+    if(!state.category) return;
+    const needsPerm = typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function";
+    $("permission-note").style.display = needsPerm ? "block" : "none";
+    showScreen("rotate-screen");
+  });
 
-    messages.push(
-      ...history
-    );
+  $("cancel-begin-btn").addEventListener("click", ()=>{
+    showScreen("menu-screen");
+  });
 
-
-    const {
-
-      msg:aMsg,
-
-      bubble:aBubble
-
-    } =
-      addMessage(
-        'assistant',
-        ''
-      );
-
-
-    aBubble.innerHTML =
-      '<span class="cursor"></span>';
-
-
-    setGenerating(
-      true
-    );
-
-
-    controller =
-      new AbortController();
-
-
-    const t0 =
-      performance.now();
-
-
-    let firstTokenAt =
-      null;
-
-
-    let fullText =
-      '';
-
-
-    let tokenCount =
-      0;
-
-
+  $("begin-btn").addEventListener("click", async ()=>{
+    // request motion permission (iOS)
+    if(typeof DeviceOrientationEvent !== "undefined" &&
+       typeof DeviceOrientationEvent.requestPermission === "function"){
+      try{
+        const res = await DeviceOrientationEvent.requestPermission();
+        if(res !== "granted"){
+          // proceed anyway; tap fallback still works
+        }
+      }catch(e){ /* ignore, fallback to taps */ }
+    }
+    // try fullscreen + landscape lock (best effort, ignore failures)
     try{
-
-
-      const res =
-        await fetch(
-
-          url +
-          '/v1/chat/completions',
-
-          {
-
-            method:
-              'POST',
-
-            headers:{
-
-              'Content-Type':
-                'application/json'
-
-            },
-
-            signal:
-              controller.signal,
-
-            body:
-              JSON.stringify({
-
-                model:
-                  currentModel ||
-                  'local-model',
-
-                messages,
-
-                stream:
-                  true,
-
-                temperature:
-                  0.7
-
-              })
-
-          }
-
-        );
-
-
-      if(
-
-        !res.ok ||
-        !res.body
-
-      ){
-
-        throw new Error(
-          'HTTP ' +
-          res.status
-        );
-
+      if(document.documentElement.requestFullscreen){
+        await document.documentElement.requestFullscreen();
       }
-
-
-      const reader =
-        res.body.getReader();
-
-
-      const decoder =
-        new TextDecoder();
-
-
-      let buf =
-        '';
-
-
-      while(true){
-
-        const {
-
-          done,
-
-          value
-
-        } =
-          await reader.read();
-
-
-        if(done){
-
-          break;
-
-        }
-
-
-        buf +=
-          decoder.decode(
-            value,
-            {
-              stream:true
-            }
-          );
-
-
-        const lines =
-          buf.split(
-            '\n'
-          );
-
-
-        buf =
-          lines.pop();
-
-
-        for(
-
-          const line
-          of lines
-
-        ){
-
-          const t =
-            line.trim();
-
-
-          if(
-
-            !t.startsWith(
-              'data:'
-            )
-
-          ){
-
-            continue;
-
-          }
-
-
-          const payload =
-            t.slice(
-              5
-            ).trim();
-
-
-          if(
-
-            payload ===
-            '[DONE]'
-
-          ){
-
-            continue;
-
-          }
-
-
-          try{
-
-            const json =
-              JSON.parse(
-                payload
-              );
-
-
-            const delta =
-              json
-                .choices?.[0]
-                ?.delta
-                ?.content;
-
-
-            if(delta){
-
-              if(
-
-                firstTokenAt ===
-                null
-
-              ){
-
-                firstTokenAt =
-                  performance.now();
-
-              }
-
-
-              fullText +=
-                delta;
-
-
-              tokenCount++;
-
-
-              aBubble.innerHTML =
-                '';
-
-
-              aBubble.appendChild(
-
-                document.createTextNode(
-                  fullText
-                )
-
-              );
-
-
-              const cur =
-                document.createElement(
-                  'span'
-                );
-
-
-              cur.className =
-                'cursor';
-
-
-              aBubble.appendChild(
-                cur
-              );
-
-
-              scrollToBottom();
-
-            }
-
-
-            if(json.model){
-
-              currentModel =
-                json.model;
-
-            }
-
-
-          }catch(e){
-
-            /* Ignore incomplete chunks */
-
-          }
-
-        }
-
+    }catch(e){}
+    try{
+      if(screen.orientation && screen.orientation.lock){
+        await screen.orientation.lock("landscape");
       }
+    }catch(e){}
 
+    startCountdown();
+  });
 
-      const t1 =
-        performance.now();
-
-
-      aBubble.textContent =
-        fullText ||
-        '(empty response)';
-
-
-      const totalS =
-        (
-          t1 -
-          t0
-        ) /
-        1000;
-
-
-      const genS =
-        firstTokenAt
-
-          ? (
-              t1 -
-              firstTokenAt
-            ) /
-            1000
-
-          : totalS;
-
-
-      const ttft =
-        firstTokenAt
-
-          ? (
-              firstTokenAt -
-              t0
-            ) /
-            1000
-
-          : totalS;
-
-
-      const tps =
-        genS > 0
-
-          ? tokenCount /
-            genS
-
-          : 0;
-
-
-      addStats(
-
-        aMsg,
-
-        `<span>model: <b>${currentModel || '—'}</b></span>
-         <span>ttft: <b>${fmt(ttft,2)}s</b></span>
-         <span>tok/s: <b>${fmt(tps,1)}</b></span>
-         <span>chunks: <b>${tokenCount}</b></span>
-         <span>total: <b>${fmt(totalS,2)}s</b></span>`
-
-      );
-
-
-      history.push({
-
-        role:
-          'assistant',
-
-        content:
-          fullText
-
-      });
-
-
-      store.set(
-        'lms_history',
-        history
-      );
-
-
-      modelLabel.textContent =
-        currentModel ||
-        'connected';
-
-
-      setStatus(
-        'online'
-      );
-
-
-    }catch(err){
-
-
-      if(
-
-        err.name ===
-        'AbortError'
-
-      ){
-
-        aBubble.textContent =
-          fullText ||
-          '(stopped)';
-
-
-        if(fullText){
-
-          history.push({
-
-            role:
-              'assistant',
-
-            content:
-              fullText
-
-          });
-
-
-          store.set(
-            'lms_history',
-            history
-          );
-
-        }
-
-
-      }else{
-
-
-        aBubble.classList.add(
-          'error'
-        );
-
-
-        aBubble.textContent =
-          'Error reaching server: ' +
-          err.message;
-
-
-        setStatus(
-          'offline'
-        );
-
+  /* ---------------- COUNTDOWN ---------------- */
+  function startCountdown(){
+    showScreen("countdown-screen");
+    let n = 3;
+    $("countdown-num").textContent = n;
+    const iv = setInterval(()=>{
+      n -= 1;
+      if(n<=0){
+        clearInterval(iv);
+        startGame();
+      } else {
+        $("countdown-num").textContent = n;
       }
+    },700);
+  }
 
+  /* ---------------- GAME ---------------- */
+  function startGame(){
+    state.words = shuffle(CATEGORIES[state.category].words);
+    state.index = 0;
+    state.score = 0;
+    state.correctWords = [];
+    state.timeLeft = state.timeLimit;
+    state.baseline = null;
+    state.ended = false;
 
-    }finally{
+    $("score-display").textContent = "0";
+    $("timer-display").textContent = state.timeLeft;
+    $("timer-bar").style.width = "100%";
+    $("timer-bar").style.transition = "none";
+    requestAnimationFrame(()=>{ $("timer-bar").style.transition = "width 1s linear"; });
 
+    showNextWord(true);
+    showScreen("game-screen");
+    attachOrientationListener();
 
-      setGenerating(
-        false
-      );
+    state.timerInterval = setInterval(()=>{
+      state.timeLeft -= 1;
+      $("timer-display").textContent = Math.max(state.timeLeft,0);
+      $("timer-bar").style.width = (state.timeLeft/state.timeLimit*100)+"%";
+      if(state.timeLeft <= 10){ $("timer-display").classList.add("urgent"); }
+      if(state.timeLeft <= 0){
+        endGame();
+      }
+    },1000);
+  }
 
+  function showNextWord(isFirst){
+    if(state.index >= state.words.length){
+      state.words = state.words.concat(shuffle(CATEGORIES[state.category].words));
+    }
+    $("word").textContent = state.words[state.index];
+    state.baseline = null; // recalibrate neutral on next orientation reading
+    state.cooldown = false;
+  }
 
-      controller =
-        null;
+  function registerResult(correct){
+    if(state.ended) return;
+    if(state.cooldown) return;
+    state.cooldown = true;
 
+    const word = state.words[state.index];
+    const flash = $("flash");
+    flash.className = correct ? "show-correct" : "show-pass";
+
+    if(correct){
+      state.score += 1;
+      state.correctWords.push(word);
+      $("score-display").textContent = state.score;
     }
 
+    setTimeout(()=>{ flash.className = ""; }, 220);
+
+    state.index += 1;
+    setTimeout(()=>{ showNextWord(false); }, 180);
   }
 
+  // tap fallback
+  $("tap-correct").addEventListener("click", ()=> registerResult(true));
+  $("tap-pass").addEventListener("click", ()=> registerResult(false));
 
-  history.forEach(
+  /* ---------------- ORIENTATION / TILT LOGIC ---------------- */
+  const TILT_THRESHOLD = 32;   // degrees of change from neutral to trigger
+  const REARM_THRESHOLD = 12;  // must return within this range of neutral to re-arm
 
-    m => addMessage(
-      m.role,
-      m.content
-    )
-
-  );
-
-
-  if(currentModel){
-
-    modelLabel.textContent =
-      currentModel;
-
+  function getOrientationAngle(){
+    if(screen.orientation && typeof screen.orientation.angle === "number"){
+      return screen.orientation.angle;
+    }
+    if(typeof window.orientation === "number"){
+      return window.orientation;
+    }
+    return 0;
   }
 
-
-  renderEmpty();
-
-
-  if(cfg.host){
-
-    testConnection(
-      true
-    );
-
-  }else{
-
-    settingsEl.classList.add(
-      'open'
-    );
-
+  function computeTilt(event){
+    const angle = getOrientationAngle();
+    if(angle === 90) return -event.gamma;
+    if(angle === -90 || angle === 270) return event.gamma;
+    return event.beta; // portrait fallback
   }
+
+  let armed = true;
+
+  function handleOrientation(event){
+    if(event.beta === null || event.gamma === null) return;
+    const tilt = computeTilt(event);
+    if(tilt === null || tilt === undefined || isNaN(tilt)) return;
+
+    if(state.baseline === null){
+      state.baseline = tilt;
+      armed = true;
+      return;
+    }
+
+    const delta = tilt - state.baseline;
+
+    if(armed && !state.cooldown){
+      if(delta >= TILT_THRESHOLD){
+        armed = false;
+        registerResult(true);
+      } else if(delta <= -TILT_THRESHOLD){
+        armed = false;
+        registerResult(false);
+      }
+    }
+
+    if(!armed && Math.abs(delta) < REARM_THRESHOLD){
+      armed = true;
+    }
+  }
+
+  function attachOrientationListener(){
+    if(state.listenerAttached) return;
+    window.addEventListener("deviceorientation", handleOrientation, true);
+    state.listenerAttached = true;
+  }
+  function detachOrientationListener(){
+    if(!state.listenerAttached) return;
+    window.removeEventListener("deviceorientation", handleOrientation, true);
+    state.listenerAttached = false;
+  }
+
+  /* ---------------- END GAME ---------------- */
+  function endGame(){
+    state.ended = true;
+    clearInterval(state.timerInterval);
+    detachOrientationListener();
+    $("timer-display").classList.remove("urgent");
+    try{ if(document.exitFullscreen && document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+    try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+
+    $("results-cat").textContent = CATEGORIES[state.category].name;
+    $("final-score").textContent = state.score;
+    const list = $("results-list");
+    list.innerHTML = "";
+    if(state.correctWords.length === 0){
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = "No words yet — try again!";
+      list.appendChild(chip);
+    } else {
+      state.correctWords.forEach(w=>{
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = w;
+        list.appendChild(chip);
+      });
+    }
+    showScreen("results-screen");
+  }
+
+  $("menu-btn").addEventListener("click", ()=>{
+    showScreen("menu-screen");
+  });
+  $("again-btn").addEventListener("click", ()=>{
+    startCountdown();
+  });
 
 })();
-
-</script></body>
+</script>
+</body>
 </html>
